@@ -3,9 +3,13 @@ var Tween = require("../../kettle-tween.js");
 
 var Easing = require('kettle-ease') ;
 var _ = require("underscore");
+//var animMeter = require("./animationCounter.js").animMeter;
+
+//var fpsDisplay = animMeter('fps-counter');
+
 var line = Tween.Line;
 
-easeFunc = "Circ";
+easeFunc = "Cubic";
 
 var _easing = {
   //easeInElastic:Easing.easeInElastic,
@@ -26,11 +30,11 @@ function createTween(obj, ease, y){
   var t = new Tween();
   var options = {
     node: obj,
-    duration: 2000,
+    duration: 1000,
     curve: new line([50, y, 0],[600, y, 360]),
     onAnimate: update,
     easing: ease,
-    onBegin:function(){ 
+    onBegin:function(){
       this.prevTime = Date.now();
     },
     onEnd:function(){
@@ -67,7 +71,7 @@ function createBox(){
 for(var ease in _easing){
   var _ease = _easing[ease];
   var y = (count * 30);
-  
+
   createTween( createBox(), _ease, y );
 
   count++;

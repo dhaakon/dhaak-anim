@@ -205,7 +205,7 @@ Tween.prototype = {
         // Get the difference between the current time and the last time
         this._delta = this._currentTime - this._previousTime;
         // Bottleneck the difference if it is too high
-        this._delta = Math.min(this._delta, 25);
+        this._delta = Math.min(this._delta, 16);
 
         // If we are moving forward
         if (!this.isReversed){
@@ -214,7 +214,7 @@ Tween.prototype = {
                 // Add this and the adjusted frame step to the tween value
                 this._t = this._delta + this._t;
                 // Continue to the next step
-                this._update();
+                //this.animationFrame = window.requestAnimationFrame(this._update.bind(this));
                 this._setProperties();
             // If we are at the end of the tween
             }else{
@@ -224,14 +224,14 @@ Tween.prototype = {
                 // End the tween
                 this._stop();
             }
-        // If we are moving in reverse  
+        // If we are moving in reverse
         }else{
              // If the tween value is greater than the start (0)
              if (this._t > 0){
                 // Tween value minus the adjusted frame step or the beginning value
                 this._t = (this._t - this._delta > 0) ? this._t - this._delta : 0;
                 // Continue to the next step
-                this._update();
+                //this.animationFrame = window.requestAnimationFrame(this._update.bind(this));
                 this._setProperties();
 
             }else{
@@ -245,7 +245,7 @@ Tween.prototype = {
     },
 
   /**
-   * Stops the tween 
+   * Stops the tween
    * @private {object}    Tween._stop
    *
    */
@@ -261,7 +261,7 @@ Tween.prototype = {
               // If there is an onAnimate function return the tween with a beginning of 0 and an end of 1
               if (this.onAnimate != null) var c = this.easing( this._t, 0, 1, this.duration);
           // If there is no property value and only a curve value
-          }else{ 
+          }else{
               // If we only have one curve
               if(this._motionStack.length == 1){
                   // Assign the onAnimate parameter to the one curve
@@ -289,6 +289,7 @@ Tween.prototype = {
 
    _stop:function(){
     this.isAnimating = false;
+    window.cancelAnimationFrame(this.animationFrame);
     if (this.onEnd != null && !this.isPaused) this.onEnd();
    },
 
@@ -300,13 +301,9 @@ Tween.prototype = {
 
    _update:function(c){
      var self = this;
-    //this._step();
-    this.rF = function(){
-      //self._update();
-      self._step()
-    }
-    if (this.isAnimating == true) window.requestAnimFrame(this.rF);
 
+    if (this.isAnimating == true) this.animationFrame = window.requestAnimFrame(this._update.bind(this));
+    self._step();
    },
 
   /**
