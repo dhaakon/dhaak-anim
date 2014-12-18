@@ -3,37 +3,51 @@ var Tween = require("../../kettle-tween.js");
 
 var Easing = require('kettle-ease') ;
 var _ = require("underscore");
-//var animMeter = require("./animationCounter.js").animMeter;
 
+//var animMeter = require("./animationCounter.js").animMeter;
 //var fpsDisplay = animMeter('fps-counter');
 
 var line = Tween.Line;
+var tweens = [];
 
-easeFunc = "Cubic";
+window.onclick = function(){
+  for(var tween in tweens){
+    var _tween = tweens[tween];
+    if (!_tween.isAnimating) _tween.play();
+  }
+}
 
-var _easing = {
+easeFunc = "Expo";
+
+var _easing = [
   //easeInElastic:Easing.easeInElastic,
-  easeInCirc:Easing["easeIn" + easeFunc],
-  easeInOutCirc:Easing["easeInOut" + easeFunc],
-  easeOutCirc:Easing["easeOut" + easeFunc],
-};
+  Easing["easeIn" + easeFunc],
+  Easing["easeInOut" + easeFunc],
+  Easing["easeOut" + easeFunc],
+];
 
 function update(c){
   var r = g = Math.round(c[0]);
   var b = 255 - r;
-  this.node.style["-webkit-transform"] = "translate3d(" + ~~(c[0]) + "px, " + ~~(c[1]) + "px, 0px) rotate(" + ~~(c[2]) + "deg)";
+  this.mat = this.mat.translate(c[0], c[1], 1);
+  this.mat = this.mat.rotate(c[2]);
+
+  this.node.style.transform = this.mat.toString();
+  this.mat = new WebKitCSSMatrix();
 }
 
 //var prevTime = Date.now();
 
-function createTween(obj, ease, y){
+function createTween(obj, ease, y, delay){
   var t = new Tween();
   var options = {
     node: obj,
-    duration: 1000,
-    curve: new line([50, y, 0],[600, y, 360]),
+    duration: 1500,
+    curve: new line([50, y, 0],[600, y, 720]),
     onAnimate: update,
     easing: ease,
+    mat:new WebKitCSSMatrix(),
+    delay:delay || 0,
     onBegin:function(){
       this.prevTime = Date.now();
     },
@@ -43,14 +57,15 @@ function createTween(obj, ease, y){
 
       var startValues = [600, y, 0];
       var finishValues = [600, y + 600, 0];
-      this.play();
-      console.log(diff);
-      this.prevTime = Date.now();
 
+      //this.play();
+      //setTimeout( function(){this.play()}.bind(this), this.delay);
+      this.prevTime = Date.now();
     }
   };
 
   t.play(options);
+  tweens.push(t);
 }
 
 var count = 0;
@@ -68,12 +83,15 @@ function createBox(){
   return _obj;
 }
 
-for(var ease in _easing){
-  var _ease = _easing[ease];
-  var y = (count * 30);
+var numBoxes = 27;
 
+while(numBoxes > 0){
+  var _ease = _easing[count % 3];
+  var y = (count * 22);
+  //var _delay = count
   createTween( createBox(), _ease, y );
 
   count++;
+  numBoxes--;
 }
 

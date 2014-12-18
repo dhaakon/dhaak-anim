@@ -205,7 +205,8 @@ Tween.prototype = {
         // Get the difference between the current time and the last time
         this._delta = this._currentTime - this._previousTime;
         // Bottleneck the difference if it is too high
-        this._delta = Math.min(this._delta, 16);
+        this._delta = Math.min(this._delta, 25);
+        //console.log(this._delta);
 
         // If we are moving forward
         if (!this.isReversed){

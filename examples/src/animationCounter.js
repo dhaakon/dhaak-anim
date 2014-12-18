@@ -197,3 +197,4 @@ function animMeter(id, fps) {
 
 	return this;
 }
+module.exports = {animMeter:animMeter}
