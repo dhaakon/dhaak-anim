@@ -80,88 +80,93 @@
  *    @property {array}  _motionStack (read-only) The motion objects which will be tweened.
  */
 
-var linearEaseNone = function(t, b, c, d){return c*t/d + b;},
-
 var Tween = function(){
-  this.onEnd = -1; 
-  this.onBegin = -1; 
-  this.onAnimate = -1;  
+  this.onEnd = null;
+  this.onBegin = null; 
+  this.onAnimate = null;
   this.delay = 0;
   this.node = null;
   this.duration = 0;
   this.isAnimating = false; 
   this.isReversed = false; 
   this.isPaused = false; 
-  this.properties = -1;  
+  this.properties = null;  
   this.curve = [0, 1];
-  this.easing = linearEaseNone;
+  this.easing = function(t, b, c, d){
+    return c*t/d + b;
+  };
   this._previousTime = null; 
   this._currentTime = null; 
-  this._startTime = null; 
+  this._startTime = 0;
+  this._endTime = null; 
   this._delta = null; 
   this._t = 0;
-  this._motionStack = -1;
+  this._motionStack = null;
 }
 
 Tween.prototype = {
-   
+   _callbacks:{
+      onEnd:[],
+      onBegin:[],
+      onComplete:[]
+   },
    /**
     * Private method which creates a MotionObject based on the curves set in the Tween Options before the start of the tween.
-    * @private  {object}    Tween._setCurve
+    * @private  {object}    Tween._setMotionFromCurve
     * @property {object}
     *
    */
-   _setCurve:function(){
+   _setMotionFromCurve:function(){
     var c = this.curve;
 
-    if (c instanceof Line == false){
-      var _m = new MotionObject();
-      _m.d = this.duration;
-      _m.b = c[0];
-      _m.c = c[1] - c[0];
-      this._motionStack.push(_m);
+    if (c instanceof Tween.Line == false){
+      var _mo = new MotionObject();
+      _mo.d = this.duration;
+      _mo.b = c[0];
+      _mo.c = c[1] - c[0];
+      this._motionStack.push(_mo);
     }else{
         var _c1 = c.curves[0];
         var _c2 = c.curves[1];
 
         for (var i = 0; i < _c1.length; ++i){
-          var _m = new MotionObject();
+          var _mo = new MotionObject();
 
-          _m.b = _c1[i];
-          _m.c = _c2[i] - _c1[i];
-          this._motionStack.push(_m);
+          _mo.b = _c1[i];
+          _mo.c = _c2[i] - _c1[i];
+          this._motionStack.push(_mo);
         }
       }
   },
 
   /**
    *  Private method which creates a MotionObject based on the property Object passed in
-   *  @private {object}     Tween._setProperty
+   *  @private {object}     Tween._setMotionFromProperty
    *  @param   {object}     properties           The properties object which should contain standard CSS properties.
    *  
    */
   
-   _setProperty:function(properties){
+   _setMotionFromProperty:function(){
          // Each object in the properties object should be a CSS style
-           for(property in properties){
-              var _m = new MotionObject();
-              _m.prop = property;
-              var _property = properties[property];
+           for(var property in this.properties){
+              var _mo = new MotionObject();
+              _mo.prop = property;
+              var _property = this.properties[property];
               // If this is an object parse
               // // TODO: webkit, color tranforms: further detection and proceeding parsing
               //
               if (typeof _property == "object"){
-                for(_p in _property){
-                    if (_p == "begin") _m.b = _property[_p];
-                    if (_p == "end") {_m.c = _property[_p] - _m.b;}
-                    if (_p == "unit") _m.unit = _property[_p];
+                for(var _p in _property){
+                    if (_p == "begin") _mo.b = _property[_p];
+                    if (_p == "end") {_mo.c = _property[_p] - _mo.b;}
+                    if (_p == "unit") _mo.unit = _property[_p];
                  }
               // If not use the value as the end
               }else{
                  this.change = _property - this.begin;                 
               }
 
-              this._motionStack.push(_m);
+              this._motionStack.push(_mo);
            }
    },
 
@@ -175,16 +180,16 @@ Tween.prototype = {
     var self = this; // Self reference for the delay setTimeout callback
 
     this._currentTime = 0;
-   
-    if (this.onBegin != -1) this.onBegin(); 
+    this._startTime = this.delay;
+    this._endTime = (this.delay == 0) ? this.duration : this.duration;
+
+    if (this.onBegin != null) this.onBegin();
     this._previousTime = Date.now();
     this.isAnimating = true;
-    this._t = (self.isReversed) ? self.duration : 0;
 
-
-    setTimeout(function(){
-        self._update();
-      }, self.delay); 
+    this._t = (this.isReversed == true) ? this._endTime : 0;
+    var self = this;
+    setTimeout(function(){self._update();}, this.delay);
    },
 
   /**
@@ -200,19 +205,21 @@ Tween.prototype = {
         this._delta = this._currentTime - this._previousTime;
         // Bottleneck the difference if it is too high
         this._delta = Math.min(this._delta, 25);
-        
+
         // If we are moving forward
         if (!this.isReversed){
-            // If the time and the difference is less than the duration
-            if (this._t + this._delta < this.duration){
+            // If the time and the difference is les:s than the duration
+            if (this._t + this._delta < this._endTime){
                 // Add this and the adjusted frame step to the tween value
                 this._t = this._delta + this._t;
                 // Continue to the next step
                 this._update();
+                this._setProperties();
             // If we are at the end of the tween
             }else{
                 // Set the tween value to the final step
                 this._t = this.duration;
+                this._setProperties();
                 // End the tween
                 this._stop();
             }
@@ -224,47 +231,55 @@ Tween.prototype = {
                 this._t = (this._t - this._delta > 0) ? this._t - this._delta : 0;
                 // Continue to the next step
                 this._update();
+                this._setProperties();
+
             }else{
               this._stop();
             }
           }
+        // If there is an onAnimate callback
+        // Change the time
+        this._previousTime = this._currentTime;
 
-        // Iterate through the motion stack to get all our motion objects
-        for ( var tween in this._motionStack){
-            // Assign a temporary motion object
-            var motionObject = this._motionStack[tween];
-            // If it has a property value
-            if (motionObject.prop != -1){
-                // Assign the value to the tween return value
-                this.node.style[motionObject.prop] = this.easing( this._t, motionObject.b, motionObject.c, this.duration) + motionObject.unit;
-                // If there is an onAnimate function return the tween with a beginning of 0 and an end of 1
-                if (this.onAnimate != -1) var c = this.easing( this._t, 0, 1, this.duration);
-            // If there is no property value and only a curve value
-            }else{ 
-                // If we only have one curve
-                if(this._motionStack.length == 1){
-                    // Assign the onAnimate parameter to the one curve
-                    var c = this.easing( this._t, motionObject.b, motionObject.c, this.duration);
-                // If there are multiple curves
-                }else{
-                    // Assign the onAnimate parameter to an empty array
-                    var c = [];
-                    // Iterate through the motionObjects
-                    for (var motionObject in this._motionStack){
-                        var _m = this._motionStack[motionObject];
-                        // Add the return paramater to the array
-                        c.push(this.easing( this._t, _m.b, _m.c, this.duration));
-                    }
-                }
-             }
-          }
+    },
 
-          // If there is an onAnimate callback
-          if (this.onAnimate != -1) this.onAnimate(c);
-          // Change the time
-          this._previousTime = this._currentTime;
+  /**
+   * Stops the tween 
+   * @private {object}    Tween._stop
+   *
+   */
+   _setProperties:function(){
+      // Iterate through the motion stack to get all our motion objects
+      for (var tween in this._motionStack){
+          // Assign a temporary motion object
+          var motionObject = this._motionStack[tween];
+          // If it has a property value
+          if (motionObject.prop != null){
+              // Assign the value to the tween return value
+              this.node.style[motionObject.prop] = this.easing( this._t, motionObject.b, motionObject.c, this._endTime) + motionObject.unit;
+              // If there is an onAnimate function return the tween with a beginning of 0 and an end of 1
+              if (this.onAnimate != null) var c = this.easing( this._t, 0, 1, this.duration);
+          // If there is no property value and only a curve value
+          }else{ 
+              // If we only have one curve
+              if(this._motionStack.length == 1){
+                  // Assign the onAnimate parameter to the one curve
+                  var c = this.easing( this._t, motionObject.b, motionObject.c, this.duration);
+              // If there are multiple curves
+              }else{
+                  // Assign the onAnimate parameter to an empty array
+                  var c = [];
+                  // Iterate through the motionObjects
+                  for (var motionObject in this._motionStack){
+                      var _m = this._motionStack[motionObject];
+                      // Add the return paramater to the array
+                      c.push(this.easing( this._t, _m.b, _m.c, this.duration));
+                  }
+              }
+           }
+           if (this.onAnimate != null) this.onAnimate(c);
+        }
    },
-
   /**
    * Stops the tween 
    * @private {object}    Tween._stop
@@ -273,7 +288,7 @@ Tween.prototype = {
 
    _stop:function(){
     this.isAnimating = false;
-    if (this.onEnd != -1 && !this.isPaused) this.onEnd();
+    if (this.onEnd != null && !this.isPaused) this.onEnd();
    },
 
   /**
@@ -283,9 +298,14 @@ Tween.prototype = {
    */
 
    _update:function(c){
-    var self = this; // Self reference for the request animated frame callback
-    var hasOnAnimate = (this.onAnimate != -1)
-    if (this.isAnimating == true) requestAnimFrame(function(){self._step()});
+     var self = this;
+    //this._step();
+    this.rF = function(){
+      //self._update();
+      self._step()
+    }
+    if (this.isAnimating == true) window.requestAnimFrame(this.rF);
+
    },
 
   /**
@@ -350,18 +370,18 @@ Tween.prototype = {
       if(options){
         // Iterate through the options
         for (var key in options){
+          
           // Assign our properties
           this[key] = options[key];
         }
       }
-
       // Grab the motion objects
-      if (this._motionStack == -1){
+      if (this._motionStack == null){
         this._motionStack = [];
-        if (this.properties != -1) {
-          this._setProperty(this.properties);
+        if (this.properties != null) {
+          this._setMotionFromProperty();
         }else{
-          this._setCurve();
+          this._setMotionFromCurve();
         }
       }
 
@@ -380,7 +400,7 @@ Tween.prototype = {
 */
 
 function MotionObject(){
-  this.b = 0; this.c; this.t; this.prop = -1; this.unit = "";
+  this.b = 0; this.c; this.t; this.prop = null; this.unit = "";
 }
 
 /**
@@ -390,11 +410,126 @@ function MotionObject(){
   @param {array} b              an Array of end points
 */
 
-function Line(a, b){
+Tween.Line = function(a, b){
   if (a.length != b.length) throw new Error("Uneven Amount of Lines " + a.length + " != " + b.length);
   this.curves = [a, b];
 }
 
+/** @namespace */
+Tween.Easing = {
+      /** @property {object} Back */
+      Back:{
+        /** 
+         * @public {function} Easing.Back.easeIn 
+         * @public {function} Easing.Back.easeOut
+         * @public {function} Easing.Back.easeInOut
+         * */
+        easeIn:function(t, b, c, d, s){if (s == undefined) s = 1.70158;return c*(t/=d)*t*((s+1)*t - s) + b;},
+        easeOut:function(t, b, c, d, s){if (s == undefined) s = 1.70158;return c*((t=t/d-1)*t*((s+1)*t + s) + 1) + b;},
+        easeInOut:function(t, b, c, d, s){if (s == undefined) s = 1.70158; if ((t/=d/2) < 1) return c/2*(t*t*(((s*=(1.525))+1)*t - s)) + b;return c/2*((t-=2)*t*(((s*=(1.525))+1)*t + s) + 2) + b;}
+      },
+      /** @property {object} Bounce */
+      Bounce:{
+        /** 
+         * @public {function} Easing.Bounce.easeIn 
+         * @public {function} Easing.Bounce.easeOut
+         * @public {function} Easing.Bounce.easeInOut
+         * */
+        easeOut:function(t, b, c, d){if ((t/=d) < (1/2.75)) {return c*(7.5625*t*t) + b;} else if (t < (2/2.75)) {return c*(7.5625*(t-=(1.5/2.75))*t + .75) + b;} else if (t < (2.5/2.75)) {return c*(7.5625*(t-=(2.25/2.75))*t + .9375) + b;} else {return c*(7.5625*(t-=(2.625/2.75))*t + .984375) + b;}},
+        easeIn:function(t, b, c, d){return c - Easing.Bounce.easeOut(d-t, 0, c, d) + b; },
+        easeInOut:function(t, b, c, d){	if (t < d/2) return Easing.Bounce.easeOut(t*2, 0, c, d) * .5 + b;else return Easing.Bounce.easeOut(t*2-d, 0, c, d) * .5 + c*.5 + b;}
+      },
+      /** @property {object} Circ */
+      Circ:{
+        /** 
+         * @public {function} Easing.Circ.easeIn 
+         * @public {function} Easing.Circ.easeOut
+         * @public {function} Easing.Circ.easeInOut
+         * */
+        easeIn:function(t, b, c, d){return c*(t/=d)*t*t + b;},
+        easeOut:function(t, b, c, d){return c*((t=t/d-1)*t*t + 1) + b;},
+        easeInOut:function(t, b, c, d){if ((t/=d/2) < 1) return c/2*t*t*t + b; return c/2*((t-=2)*t*t + 2) + b;}
+      },
+      /** @property {object} Cubic */
+      Cubic:{
+        /** 
+         * @public {function} Easing.Cubic.easeIn 
+         * @public {function} Easing.Cubic.easeOut
+         * @public {function} Easing.Cubic.easeInOut
+         * */
+        easeIn:function(t, b, c, d){return c*(t/=d)*t*t + b;},
+        easeOut:function(t, b, c, d){return c*((t=t/d-1)*t*t + 1) + b;},
+        easeInOut:function(t, b, c, d){if ((t/=d/2) < 1) return c/2*t*t*t + b; return c/2*((t-=2)*t*t + 2) + b;}
+      },
+      /** @property {object} Elastic */
+      Elastic:{
+        /** 
+         * @public {function} Easing.Elastic.easeIn 
+         * @public {function} Easing.Elastic.easeOut
+         * @public {function} Easing.Elastic.easeInOut
+         * */
+        easeIn:function(t, b, c, d, a, p){if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;if (!a || a < Math.abs(c)) { a=c; var s=p/4; }else var s = p/(2*Math.PI) * Math.asin (c/a);return -(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;},
+        easeOut:function(t, b, c, d, a, p){if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;if (!a || a < Math.abs(c)) { a=c; var s=p/4; }else var s = p/(2*Math.PI) * Math.asin (c/a);return (a*Math.pow(2,-10*t) * Math.sin( (t*d-s)*(2*Math.PI)/p ) + c + b);},
+        easeInOut:function(t, b, c, d, a, p){if (t==0) return b;  if ((t/=d/2)==2) return b+c;  if (!p) p=d*(.3*1.5);if (!a || a < Math.abs(c)) { a=c; var s=p/4; }else var s = p/(2*Math.PI) * Math.asin (c/a);if (t < 1) return -.5*(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;return a*Math.pow(2,-10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )*.5 + c + b;}
+      },
+      /** @property {object} Expo */
+      Expo:{
+        /** 
+         * @public {function} Easing.Expo.easeIn 
+         * @public {function} Easing.Expo.easeOut
+         * @public {function} Easing.Expo.easeInOut
+         * */
+        easeIn:function(t, b, c, d){return (t==0) ? b : c * Math.pow(2, 10 * (t/d - 1)) + b;},
+        easeOut:function(t, b, c, d){return (t==d) ? b+c : c * (-Math.pow(2, -10 * t/d) + 1) + b;},
+        easeInOut:function(t, b, c, d){if (t==0) return b;		if (t==d) return b+c;if ((t/=d/2) < 1) return c/2 * Math.pow(2, 10 * (t - 1)) + b;return c/2 * (-Math.pow(2, -10 * --t) + 2) + b;}
+      },
+      /** @property {object} linear */
+      linear:{
+        /** 
+         * @public {function} Easing.linear.easeIn 
+         * @public {function} Easing.linear.easeOut
+         * @public {function} Easing.linear.easeInOut
+         * @public {function} Easing.linear.easeNone
+         * */
+        easeNone:function(t, b, c, d){return c*t/d + b;},
+        easeIn:function(t, b, c, d){return c*t/d + b;},
+        easeOut:function(t, b, c, d){return c*t/d + b;},
+        easeInOut:function(t, b, c, d){return c*t/d + b;}
+      },
+      /** @property {object} Quad */
+      Quad:{
+        /** 
+         * @public {function} Easing.Quad.easeIn 
+         * @public {function} Easing.Quad.easeOut
+         * @public {function} Easing.Quad.easeInOut
+         * */
+        easeIn:function(t, b, c, d){return c*(t/=d)*t + b;},
+        easeOut:function(t, b, c, d){return -c *(t/=d)*(t-2) + b;},
+        easeInOut:function(t, b, c, d){if ((t/=d/2) < 1) return c/2*t*t + b; return -c/2 * ((--t)*(t-2) - 1) + b;}
+      },
+      /** @property {object} Quart */
+      Quart:{
+        /** 
+         * @public {function} Easing.Quart.easeIn 
+         * @public {function} Easing.Quart.easeOut
+         * @public {function} Easing.Quart.easeInOut
+         * */
+        easeIn:function(t, b, c, d){return c*(t/=d)*t*t*t + b;},
+        easeOut:function(t, b, c, d){return -c * ((t=t/d-1)*t*t*t - 1) + b;},
+        easeInOut:function(t, b, c, d){if ((t/=d/2) < 1) return c/2*t*t*t*t + b;return -c/2 * ((t-=2)*t*t*t - 2) + b;}
+      },
+      /** @property {object} Quint */
+      Quint:{
+        /** 
+         * @public {function} Easing.Quint.easeIn 
+         * @public {function} Easing.Quint.easeOut
+         * @public {function} Easing.Quint.easeInOut
+         * */
+        easeIn:function(t, b, c, d){return c*(t/=d)*t*t*t*t + b;},
+        easeOut:function(t, b, c, d){return c*((t=t/d-1)*t*t*t*t + 1) + b;},
+        easeInOut:function(t, b, c, d){if ((t/=d/2) < 1) return c/2*t*t*t*t*t + b;return c/2*((t-=2)*t*t*t*t + 2) + b;}
+      }
+    }
 /**
  * @ignore
  */
@@ -409,3 +544,41 @@ window.requestAnimFrame = (function(){
                   window.setTimeout(callback, 1000 / 60);
           };
 })();
+module.exports = {
+  Tween:Tween
+
+}
+/*
+if (!Function.prototype.bind) {
+  Function.prototype.bind = function bind(that) {
+    var target = this;
+    if (typeof target != "function") {
+        throw new TypeError();
+    }
+    var args = slice.call(arguments, 1),
+        bound = function () {
+
+          if (this instanceof bound) {
+            var F = function(){};
+            F.prototype = target.prototype;
+            var self = new F;
+            var result = target.apply(
+                self,
+                args.concat(Array.slice.call(arguments))
+            );
+            if (Object(result) === result) {
+                return result;
+            }
+            return self;
+          } else {
+            return target.apply(
+                that,
+                args.concat(Array.slice.call(arguments))
+            );
+          }
+    };
+    return bound;
+  };
+}
+*/
+
