@@ -1,5 +1,7 @@
-var Tween = require("kettle-tween");
-var Easing = require('kettle-ease');
+//var Tween = require("kettle-tween");
+var Tween = require("../../kettle-tween.js");
+
+var Easing = require('kettle-ease') ;
 var _ = require("underscore");
 var line = Tween.Line;
 
