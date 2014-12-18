@@ -1,9 +1,9 @@
-var Tween = require("../../kettle-tween.js");
+var Tween = require("kettle-tween");
 var Easing = require('kettle-ease');
 var _ = require("underscore");
 var line = Tween.Line;
 
-easeFunc = "Quad";
+easeFunc = "Circ";
 
 var _easing = {
   //easeInElastic:Easing.easeInElastic,
@@ -54,7 +54,7 @@ function createBox(){
 
   _obj.style.background = "red";
   _obj.style.position = "absolute";
-  _obj.style['-webkit-transform'] = "translate3d( 0px, " + y + "px, 0px)";
+  _obj.style['-webkit-transform'] = "translate3d( 50px, " + y + "px, 0px)";
   _obj.style.width = "20px";
   _obj.style.height = "20px";
 

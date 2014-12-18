@@ -2,8 +2,7 @@
   "name": "kettle-tween",
   "version": "0.0.1",
   "description": "Simple lightweight tween class.",
-  "main": "src/js/beTween.js",
-  "private": true,
+  "main": "kettle-tween.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -12,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/davidpoyner/beTween"
+    "url": "https://github.com/davidpoyner/kettle-tween"
   },
   "keywords": [
     "tween",
@@ -21,9 +20,9 @@
   "author": "David Poyner",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/davidpoyner/beTween/issues"
+    "url": "https://github.com/davidpoyner/kettle-tween/issues"
   },
-  "homepage": "https://github.com/davidpoyner/beTween",
+  "homepage": "https://github.com/davidpoyner/kettle-tween",
   "devDependencies": {
     "grunt": "^0.4.5",
     "grunt-browserify": "^3.2.1",
