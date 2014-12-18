@@ -3,7 +3,7 @@ module.exports = function(grunt){
     connect:{
       all:{
         options:{
-          port: 8001,
+          port: 1337,
           hostname: "127.0.0.1",
           livereload:true
         }
@@ -12,7 +12,7 @@ module.exports = function(grunt){
     watch:{
       source:{
         files: ['./examples/src/**/*.js'],
-        tasks: ['browserify:dist']
+        tasks: ['browserify:examples']
       },
       options:{
         livereload:true
@@ -32,7 +32,7 @@ module.exports = function(grunt){
     },
     open:{
       all:{
-        path:'http://127.0.0.1:8001/examples/simple_tween.html'
+        path:'http://127.0.0.1:1337/examples/simple_tween.html'
       }
     }
   };
