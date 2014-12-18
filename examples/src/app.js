@@ -3,7 +3,7 @@ var Easing = require('kettle-ease');
 var _ = require("underscore");
 var line = Tween.Line;
 
-easeFunc = "Circ";
+easeFunc = "Quad";
 
 var _easing = {
   //easeInElastic:Easing.easeInElastic,
@@ -15,17 +15,16 @@ var _easing = {
 function update(c){
   var r = g = Math.round(c[0]);
   var b = 255 - r;
-  //document.body.style.background = "rgba(" + [r, g, b, 1].join(',') + ")";
   this.node.style["-webkit-transform"] = "translate3d(" + ~~(c[0]) + "px, " + ~~(c[1]) + "px, 0px) rotate(" + ~~(c[2]) + "deg)";
 }
 
-var prevTime = Date.now();
+//var prevTime = Date.now();
 
 function createTween(obj, ease, y){
   var t = new Tween();
   var options = {
     node: obj,
-    duration: 6000,
+    duration: 2000,
     curve: new line([50, y, 0],[600, y, 360]),
     onAnimate: update,
     easing: ease,
@@ -33,14 +32,15 @@ function createTween(obj, ease, y){
       this.prevTime = Date.now();
     },
     onEnd:function(){
-      //var diff = this.duration - (Date.now() - this.prevTime);
+      var diff = this.duration - (Date.now() - this.prevTime);
       this.reverse();
+
       var startValues = [600, y, 0];
       var finishValues = [600, y + 600, 0];
-      //this.setCurve(new line( startValues, finishValues ));
       this.play();
-      //console.log(this.curve);
-      //this.onEnd = null;
+      console.log(diff);
+      this.prevTime = Date.now();
+
     }
   };
 
