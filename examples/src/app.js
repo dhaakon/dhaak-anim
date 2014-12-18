@@ -1,20 +1,22 @@
-var Tween = require("../../beTween.js");
+var Tween = require("../../kettle-tween.js");
 var Easing = require('kettle-ease');
 var _ = require("underscore");
 var line = Tween.Line;
 
+easeFunc = "Circ";
+
 var _easing = {
   //easeInElastic:Easing.easeInElastic,
-  easeInCirc:Easing.easeInCirc,
-  easeInOutCirc:Easing.easeInOutCirc,
-  easeOutCirc:Easing.easeOutCirc,
+  easeInCirc:Easing["easeIn" + easeFunc],
+  easeInOutCirc:Easing["easeInOut" + easeFunc],
+  easeOutCirc:Easing["easeOut" + easeFunc],
 };
 
 function update(c){
   var r = g = Math.round(c[0]);
   var b = 255 - r;
   //document.body.style.background = "rgba(" + [r, g, b, 1].join(',') + ")";
-  this.node.style["-webkit-transform"] = "translate3d(" + c[0] + "px, " + c[1] + "px, 0px) rotate("+c[2]+"deg)";
+  this.node.style["-webkit-transform"] = "translate3d(" + ~~(c[0]) + "px, " + ~~(c[1]) + "px, 0px) rotate(" + ~~(c[2]) + "deg)";
 }
 
 var prevTime = Date.now();
@@ -23,8 +25,8 @@ function createTween(obj, ease, y){
   var t = new Tween();
   var options = {
     node: obj,
-    duration: 1200,
-    curve: new line([0, y, 0],[600, y, 360]),
+    duration: 6000,
+    curve: new line([50, y, 0],[600, y, 360]),
     onAnimate: update,
     easing: ease,
     onBegin:function(){ 

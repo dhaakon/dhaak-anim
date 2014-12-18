@@ -1,4 +1,79 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var Tween = require("../../kettle-tween.js");
+var Easing = require('kettle-ease');
+var _ = require("underscore");
+var line = Tween.Line;
+
+easeFunc = "Circ";
+
+var _easing = {
+  //easeInElastic:Easing.easeInElastic,
+  easeInCirc:Easing["easeIn" + easeFunc],
+  easeInOutCirc:Easing["easeInOut" + easeFunc],
+  easeOutCirc:Easing["easeOut" + easeFunc],
+};
+
+function update(c){
+  var r = g = Math.round(c[0]);
+  var b = 255 - r;
+  //document.body.style.background = "rgba(" + [r, g, b, 1].join(',') + ")";
+  this.node.style["-webkit-transform"] = "translate3d(" + ~~(c[0]) + "px, " + ~~(c[1]) + "px, 0px) rotate(" + ~~(c[2]) + "deg)";
+}
+
+var prevTime = Date.now();
+
+function createTween(obj, ease, y){
+  var t = new Tween();
+  var options = {
+    node: obj,
+    duration: 6000,
+    curve: new line([50, y, 0],[600, y, 360]),
+    onAnimate: update,
+    easing: ease,
+    onBegin:function(){ 
+      this.prevTime = Date.now();
+    },
+    onEnd:function(){
+      //var diff = this.duration - (Date.now() - this.prevTime);
+      this.reverse();
+      var startValues = [600, y, 0];
+      var finishValues = [600, y + 600, 0];
+      //this.setCurve(new line( startValues, finishValues ));
+      this.play();
+      //console.log(this.curve);
+      //this.onEnd = null;
+    }
+  };
+
+  t.play(options);
+}
+
+var count = 0;
+
+function createBox(){
+  var _obj = document.createElement("div");
+
+  _obj.style.background = "red";
+  _obj.style.position = "absolute";
+  _obj.style['-webkit-transform'] = "translate3d( 0px, " + y + "px, 0px)";
+  _obj.style.width = "20px";
+  _obj.style.height = "20px";
+
+  document.body.appendChild(_obj);
+  return _obj;
+}
+
+for(var ease in _easing){
+  var _ease = _easing[ease];
+  var y = (count * 30);
+  
+  createTween( createBox(), _ease, y );
+
+  count++;
+}
+
+
+},{"../../kettle-tween.js":2,"kettle-ease":3,"underscore":4}],2:[function(require,module,exports){
 /** 
  *    @constructor 
  *    @description A lightweight <b>Tween</b> class independant of Third Party libraries (aside from Robert Penner's easing functions). The engine has Paul Irish's
@@ -437,80 +512,7 @@ window.requestAnimFrame = (function(){
 })();
 module.exports = Tween 
 
-},{}],2:[function(require,module,exports){
-var Tween = require("../../beTween.js");
-var Easing = require('kettle-ease');
-var _ = require("underscore");
-var line = Tween.Line;
-
-var _easing = {
-  //easeInElastic:Easing.easeInElastic,
-  easeInCirc:Easing.easeInCirc,
-  easeInOutCirc:Easing.easeInOutCirc,
-  easeOutCirc:Easing.easeOutCirc,
-};
-
-function update(c){
-  var r = g = Math.round(c[0]);
-  var b = 255 - r;
-  //document.body.style.background = "rgba(" + [r, g, b, 1].join(',') + ")";
-  this.node.style["-webkit-transform"] = "translate3d(" + c[0] + "px, " + c[1] + "px, 0px) rotate("+c[2]+"deg)";
-}
-
-var prevTime = Date.now();
-
-function createTween(obj, ease, y){
-  var t = new Tween();
-  var options = {
-    node: obj,
-    duration: 1200,
-    curve: new line([0, y, 0],[600, y, 360]),
-    onAnimate: update,
-    easing: ease,
-    onBegin:function(){ 
-      this.prevTime = Date.now();
-    },
-    onEnd:function(){
-      //var diff = this.duration - (Date.now() - this.prevTime);
-      this.reverse();
-      var startValues = [600, y, 0];
-      var finishValues = [600, y + 600, 0];
-      //this.setCurve(new line( startValues, finishValues ));
-      this.play();
-      //console.log(this.curve);
-      //this.onEnd = null;
-    }
-  };
-
-  t.play(options);
-}
-
-var count = 0;
-
-function createBox(){
-  var _obj = document.createElement("div");
-
-  _obj.style.background = "red";
-  _obj.style.position = "absolute";
-  _obj.style['-webkit-transform'] = "translate3d( 0px, " + y + "px, 0px)";
-  _obj.style.width = "20px";
-  _obj.style.height = "20px";
-
-  document.body.appendChild(_obj);
-  return _obj;
-}
-
-for(var ease in _easing){
-  var _ease = _easing[ease];
-  var y = (count * 30);
-  
-  createTween( createBox(), _ease, y );
-
-  count++;
-}
-
-
-},{"../../beTween.js":1,"kettle-ease":3,"underscore":4}],3:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -579,7 +581,6 @@ module.exports = {
 		return change / 2 * (-Math.pow(2, -10 * --time) + 2) + begin;
 	},
 	easeInCirc: function easeInCirc(time, begin, change, duration) {
-		//console.log(time, begin, change, duration);
 		return -change * (Math.sqrt(1 - (time /= duration) * time) - 1) + begin;
 	},
 	easeOutCirc: function easeOutCirc(time, begin, change, duration) {
@@ -593,9 +594,6 @@ module.exports = {
 		var shootover = 1.70158;
 		var period = 0;
 		var amplitude = change;
-
-		console.log(time, begin, change, duration);
-
 		if (time == 0) return begin;
 		if ((time /= duration) == 1) return begin + change;
 		if (!period) period = duration * .3;
@@ -2078,4 +2076,4 @@ module.exports = {
   }
 }.call(this));
 
-},{}]},{},[2]);
+},{}]},{},[1]);

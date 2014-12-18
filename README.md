@@ -1,7 +1,17 @@
-(be)Tween
+kettle-tween
 =============
 
 A simple tween class independant from third party libraries.
 
-### Installation
+
+### Getting Started
+
+## Installation
 `npm install kettle-tween`
+
+## Examples
+
+
+
+
+
