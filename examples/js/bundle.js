@@ -93,6 +93,7 @@ var Tween = function(){
   this.isPaused = false; 
   this.properties = null;  
   this.curve = [0, 1];
+  this.overshoot = 0;
   this.easing = function(t, b, c, d){
     return c*t/d + b;
   };
@@ -388,6 +389,10 @@ Tween.prototype = {
 
       // Let her rip
       this._start();
+    },
+    setCurve:function(curve){
+      this.curve = curve;
+      this._setMotionFromCurve(curve);
     }
 }
 /**
@@ -416,121 +421,6 @@ Tween.Line = function(a, b){
   this.curves = [a, b];
 }
 
-/** @namespace */
-Tween.Easing = {
-      /** @property {object} Back */
-      Back:{
-        /** 
-         * @public {function} Easing.Back.easeIn 
-         * @public {function} Easing.Back.easeOut
-         * @public {function} Easing.Back.easeInOut
-         * */
-        easeIn:function(t, b, c, d, s){if (s == undefined) s = 1.70158;return c*(t/=d)*t*((s+1)*t - s) + b;},
-        easeOut:function(t, b, c, d, s){if (s == undefined) s = 1.70158;return c*((t=t/d-1)*t*((s+1)*t + s) + 1) + b;},
-        easeInOut:function(t, b, c, d, s){if (s == undefined) s = 1.70158; if ((t/=d/2) < 1) return c/2*(t*t*(((s*=(1.525))+1)*t - s)) + b;return c/2*((t-=2)*t*(((s*=(1.525))+1)*t + s) + 2) + b;}
-      },
-      /** @property {object} Bounce */
-      Bounce:{
-        /** 
-         * @public {function} Easing.Bounce.easeIn 
-         * @public {function} Easing.Bounce.easeOut
-         * @public {function} Easing.Bounce.easeInOut
-         * */
-        easeOut:function(t, b, c, d){if ((t/=d) < (1/2.75)) {return c*(7.5625*t*t) + b;} else if (t < (2/2.75)) {return c*(7.5625*(t-=(1.5/2.75))*t + .75) + b;} else if (t < (2.5/2.75)) {return c*(7.5625*(t-=(2.25/2.75))*t + .9375) + b;} else {return c*(7.5625*(t-=(2.625/2.75))*t + .984375) + b;}},
-        easeIn:function(t, b, c, d){return c - Easing.Bounce.easeOut(d-t, 0, c, d) + b; },
-        easeInOut:function(t, b, c, d){	if (t < d/2) return Easing.Bounce.easeOut(t*2, 0, c, d) * .5 + b;else return Easing.Bounce.easeOut(t*2-d, 0, c, d) * .5 + c*.5 + b;}
-      },
-      /** @property {object} Circ */
-      Circ:{
-        /** 
-         * @public {function} Easing.Circ.easeIn 
-         * @public {function} Easing.Circ.easeOut
-         * @public {function} Easing.Circ.easeInOut
-         * */
-        easeIn:function(t, b, c, d){return c*(t/=d)*t*t + b;},
-        easeOut:function(t, b, c, d){return c*((t=t/d-1)*t*t + 1) + b;},
-        easeInOut:function(t, b, c, d){if ((t/=d/2) < 1) return c/2*t*t*t + b; return c/2*((t-=2)*t*t + 2) + b;}
-      },
-      /** @property {object} Cubic */
-      Cubic:{
-        /** 
-         * @public {function} Easing.Cubic.easeIn 
-         * @public {function} Easing.Cubic.easeOut
-         * @public {function} Easing.Cubic.easeInOut
-         * */
-        easeIn:function(t, b, c, d){return c*(t/=d)*t*t + b;},
-        easeOut:function(t, b, c, d){return c*((t=t/d-1)*t*t + 1) + b;},
-        easeInOut:function(t, b, c, d){if ((t/=d/2) < 1) return c/2*t*t*t + b; return c/2*((t-=2)*t*t + 2) + b;}
-      },
-      /** @property {object} Elastic */
-      Elastic:{
-        /** 
-         * @public {function} Easing.Elastic.easeIn 
-         * @public {function} Easing.Elastic.easeOut
-         * @public {function} Easing.Elastic.easeInOut
-         * */
-        easeIn:function(t, b, c, d, a, p){if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;if (!a || a < Math.abs(c)) { a=c; var s=p/4; }else var s = p/(2*Math.PI) * Math.asin (c/a);return -(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;},
-        easeOut:function(t, b, c, d, a, p){if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;if (!a || a < Math.abs(c)) { a=c; var s=p/4; }else var s = p/(2*Math.PI) * Math.asin (c/a);return (a*Math.pow(2,-10*t) * Math.sin( (t*d-s)*(2*Math.PI)/p ) + c + b);},
-        easeInOut:function(t, b, c, d, a, p){if (t==0) return b;  if ((t/=d/2)==2) return b+c;  if (!p) p=d*(.3*1.5);if (!a || a < Math.abs(c)) { a=c; var s=p/4; }else var s = p/(2*Math.PI) * Math.asin (c/a);if (t < 1) return -.5*(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;return a*Math.pow(2,-10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )*.5 + c + b;}
-      },
-      /** @property {object} Expo */
-      Expo:{
-        /** 
-         * @public {function} Easing.Expo.easeIn 
-         * @public {function} Easing.Expo.easeOut
-         * @public {function} Easing.Expo.easeInOut
-         * */
-        easeIn:function(t, b, c, d){return (t==0) ? b : c * Math.pow(2, 10 * (t/d - 1)) + b;},
-        easeOut:function(t, b, c, d){return (t==d) ? b+c : c * (-Math.pow(2, -10 * t/d) + 1) + b;},
-        easeInOut:function(t, b, c, d){if (t==0) return b;		if (t==d) return b+c;if ((t/=d/2) < 1) return c/2 * Math.pow(2, 10 * (t - 1)) + b;return c/2 * (-Math.pow(2, -10 * --t) + 2) + b;}
-      },
-      /** @property {object} linear */
-      linear:{
-        /** 
-         * @public {function} Easing.linear.easeIn 
-         * @public {function} Easing.linear.easeOut
-         * @public {function} Easing.linear.easeInOut
-         * @public {function} Easing.linear.easeNone
-         * */
-        easeNone:function(t, b, c, d){return c*t/d + b;},
-        easeIn:function(t, b, c, d){return c*t/d + b;},
-        easeOut:function(t, b, c, d){return c*t/d + b;},
-        easeInOut:function(t, b, c, d){return c*t/d + b;}
-      },
-      /** @property {object} Quad */
-      Quad:{
-        /** 
-         * @public {function} Easing.Quad.easeIn 
-         * @public {function} Easing.Quad.easeOut
-         * @public {function} Easing.Quad.easeInOut
-         * */
-        easeIn:function(t, b, c, d){return c*(t/=d)*t + b;},
-        easeOut:function(t, b, c, d){return -c *(t/=d)*(t-2) + b;},
-        easeInOut:function(t, b, c, d){if ((t/=d/2) < 1) return c/2*t*t + b; return -c/2 * ((--t)*(t-2) - 1) + b;}
-      },
-      /** @property {object} Quart */
-      Quart:{
-        /** 
-         * @public {function} Easing.Quart.easeIn 
-         * @public {function} Easing.Quart.easeOut
-         * @public {function} Easing.Quart.easeInOut
-         * */
-        easeIn:function(t, b, c, d){return c*(t/=d)*t*t*t + b;},
-        easeOut:function(t, b, c, d){return -c * ((t=t/d-1)*t*t*t - 1) + b;},
-        easeInOut:function(t, b, c, d){if ((t/=d/2) < 1) return c/2*t*t*t*t + b;return -c/2 * ((t-=2)*t*t*t - 2) + b;}
-      },
-      /** @property {object} Quint */
-      Quint:{
-        /** 
-         * @public {function} Easing.Quint.easeIn 
-         * @public {function} Easing.Quint.easeOut
-         * @public {function} Easing.Quint.easeInOut
-         * */
-        easeIn:function(t, b, c, d){return c*(t/=d)*t*t*t*t + b;},
-        easeOut:function(t, b, c, d){return c*((t=t/d-1)*t*t*t*t + 1) + b;},
-        easeInOut:function(t, b, c, d){if ((t/=d/2) < 1) return c/2*t*t*t*t*t + b;return c/2*((t-=2)*t*t*t*t + 2) + b;}
-      }
-    }
 /**
  * @ignore
  */
@@ -545,82 +435,80 @@ window.requestAnimFrame = (function(){
                   window.setTimeout(callback, 1000 / 60);
           };
 })();
-module.exports = {
-  Tween:Tween
-
-}
-/*
-if (!Function.prototype.bind) {
-  Function.prototype.bind = function bind(that) {
-    var target = this;
-    if (typeof target != "function") {
-        throw new TypeError();
-    }
-    var args = slice.call(arguments, 1),
-        bound = function () {
-
-          if (this instanceof bound) {
-            var F = function(){};
-            F.prototype = target.prototype;
-            var self = new F;
-            var result = target.apply(
-                self,
-                args.concat(Array.slice.call(arguments))
-            );
-            if (Object(result) === result) {
-                return result;
-            }
-            return self;
-          } else {
-            return target.apply(
-                that,
-                args.concat(Array.slice.call(arguments))
-            );
-          }
-    };
-    return bound;
-  };
-}
-*/
-
+module.exports = Tween 
 
 },{}],2:[function(require,module,exports){
-var Tween = require("../../beTween.js").Tween;
-var easing = require('kettle-ease');
+var Tween = require("../../beTween.js");
+var Easing = require('kettle-ease');
 var _ = require("underscore");
-
-t = new Tween();
-
-var target = {x:0};
 var line = Tween.Line;
 
-obj = document.getElementById("circle");
+var _easing = {
+  //easeInElastic:Easing.easeInElastic,
+  easeInCirc:Easing.easeInCirc,
+  easeInOutCirc:Easing.easeInOutCirc,
+  easeOutCirc:Easing.easeOutCirc,
+};
 
 function update(c){
-  console.log(c);
+  var r = g = Math.round(c[0]);
+  var b = 255 - r;
+  //document.body.style.background = "rgba(" + [r, g, b, 1].join(',') + ")";
   this.node.style["-webkit-transform"] = "translate3d(" + c[0] + "px, " + c[1] + "px, 0px) rotate("+c[2]+"deg)";
-
 }
 
 var prevTime = Date.now();
 
-var options = {
-  node: obj,
-  duration: 1500,
-  curve: new line([0, 0, 0],[600,300, 360]),
-  onAnimate: update,
-  easing: easing.easeInCirc,
-  onEnd:function(){
-    var diff = this.duration - (Date.now() - prevTime);
-    console.log("Duration difference = " + Math.abs(diff));
-    console.log("Complete");
-    this.easing = (this.isReversed) ?  easing.easeInCirc : easing.easeOutCirc;
-    this.reverse();
-    this.play();
-  }
-};
+function createTween(obj, ease, y){
+  var t = new Tween();
+  var options = {
+    node: obj,
+    duration: 1200,
+    curve: new line([0, y, 0],[600, y, 360]),
+    onAnimate: update,
+    easing: ease,
+    onBegin:function(){ 
+      this.prevTime = Date.now();
+    },
+    onEnd:function(){
+      //var diff = this.duration - (Date.now() - this.prevTime);
+      this.reverse();
+      var startValues = [600, y, 0];
+      var finishValues = [600, y + 600, 0];
+      //this.setCurve(new line( startValues, finishValues ));
+      this.play();
+      //console.log(this.curve);
+      //this.onEnd = null;
+    }
+  };
 
-t.play(options);
+  t.play(options);
+}
+
+var count = 0;
+
+function createBox(){
+  var _obj = document.createElement("div");
+
+  _obj.style.background = "red";
+  _obj.style.position = "absolute";
+  _obj.style['-webkit-transform'] = "translate3d( 0px, " + y + "px, 0px)";
+  _obj.style.width = "20px";
+  _obj.style.height = "20px";
+
+  document.body.appendChild(_obj);
+  return _obj;
+}
+
+for(var ease in _easing){
+  var _ease = _easing[ease];
+  var y = (count * 30);
+  
+  createTween( createBox(), _ease, y );
+
+  count++;
+}
+
 
 },{"../../beTween.js":1,"kettle-ease":3,"underscore":4}],3:[function(require,module,exports){
 'use strict';
@@ -691,6 +579,7 @@ module.exports = {
 		return change / 2 * (-Math.pow(2, -10 * --time) + 2) + begin;
 	},
 	easeInCirc: function easeInCirc(time, begin, change, duration) {
+		//console.log(time, begin, change, duration);
 		return -change * (Math.sqrt(1 - (time /= duration) * time) - 1) + begin;
 	},
 	easeOutCirc: function easeOutCirc(time, begin, change, duration) {
@@ -704,6 +593,9 @@ module.exports = {
 		var shootover = 1.70158;
 		var period = 0;
 		var amplitude = change;
+
+		console.log(time, begin, change, duration);
+
 		if (time == 0) return begin;
 		if ((time /= duration) == 1) return begin + change;
 		if (!period) period = duration * .3;
