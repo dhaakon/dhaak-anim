@@ -1,3 +1,5 @@
+var TweenManager = require('./kettle-tween-manager.js');
+
 var Timeline = function( options ){
   this.init( options );
 };
@@ -17,6 +19,7 @@ var __prototype = {
 
   _duration:0,
   _percentComplete:0,
+  _manager: TweenManager,
 
   // METHODS
   init:function( options ){
@@ -24,10 +27,17 @@ var __prototype = {
       this[key] = options[key];
     }
   },
-  start:function(){},
+  start:function(){
+    this._tweens[0].play();
+  },
 
-  addTween:function( tween ){},
-  
+  addTween:function( tween ){
+    this._duration += tween.duration;
+    this._tweens.push(tween);
+  },
+
+  addTweenAt:function(tween, idx){},
+
   removeTween:function( tween ){},
 
   // EVENTS

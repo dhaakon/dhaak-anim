@@ -1,16 +1,16 @@
 /** 
- *    @constructor 
+ *    @constructor
  *    @description A lightweight <b>Tween</b> class independant of Third Party libraries (aside from Robert Penner's easing functions). The engine has Paul Irish's
  *    requestAnimFrame shim built in allowing for consistent animations across browsers and devices.
  *    <br>
- *    @example     
+ *    @example
  *    <b><u>Properties Example</b></u>
  *
  *    var tween = new Tween();
  *    target = document.getElementById("target");
  *
  *    var propertyOptions = {
- *       node: target, 
+ *       node: target,
  *       duration: 1000,
  *       properties:{height:{start:300, end:4000, unit:"px"},
  *                   width:{start:200, end:3000, unit:"px"}},
@@ -33,7 +33,7 @@
  *       node: target, 
  *       duration: 1000,
  *       curve:[0, 100],
- *       onAnimate:function(c){
+ *       onUpdate:function(c){
  *        this.node.style.width = c + "px"
  *    }
  *
@@ -50,7 +50,7 @@
  *       node: target, 
  *       duration: 1000,
  *       curve:new Line([0, 0],[100,200]),
- *       onAnimate:function(c){
+ *       onUpdate:function(c){
  *        this.node.style.width = c[0] + "px"
  *        this.node.style.left = c[1] + "px"
  *       }
@@ -61,7 +61,7 @@
  *
  *    @property {function} onEnd A function to be called at the end of the Tween.
  *    @property {function} onBegin A function to be called at the beginning of the Tween.
- *    @property {function} onAnimate A function to be called at every step of the Tween.
+ *    @property {function} onUpdate A function to be called at every step of the Tween.
  *    @property {number} delay The delay before the  Tween starts.
  *    @property {boolean} isAnimating (read-only) Boolean determining if the Tween is in animating state.
  *    @property {boolean} isReversed (read-only) Boolean determining if the Tween is reversed.
@@ -83,7 +83,7 @@
 var Tween = function(){
   this.onEnd = null;
   this.onBegin = null; 
-  this.onAnimate = null;
+  this.onUpdate = null;
   this.delay = 0;
   this.node = null;
   this.duration = 0;
@@ -93,6 +93,7 @@ var Tween = function(){
   this.properties = null;  
   this.curve = [0, 1];
   this.overshoot = 0;
+  this._manager = require('./kettle-tween-manager.js');
   this.easing = function(t, b, c, d){
     return c*t/d + b;
   };
@@ -119,8 +120,9 @@ Tween.prototype = {
    */
    _setMotionFromCurve:function(){
     var c = this.curve;
+    console.log('setting motion');
 
-    if (c instanceof Tween.Line == false){
+    if (!c instanceof Tween.Line){
       var _mo = new MotionObject();
       _mo.d = this.duration;
       _mo.b = c[0];
@@ -130,7 +132,9 @@ Tween.prototype = {
         var _c1 = c.curves[0];
         var _c2 = c.curves[1];
 
-        for (var i = 0; i < _c1.length; ++i){
+        var len = _c1.length;
+
+        for (var i = 0; i < len; ++i){
           var _mo = new MotionObject();
 
           _mo.b = _c1[i];
@@ -158,9 +162,11 @@ Tween.prototype = {
               //
               if (typeof _property == "object"){
                 for(var _p in _property){
-                    if (_p == "begin") _mo.b = _property[_p];
-                    if (_p == "end") {_mo.c = _property[_p] - _mo.b;}
-                    if (_p == "unit") _mo.unit = _property[_p];
+                  switch(_p){
+                    case (_p == "begin"): _mo.b = _property[_p];
+                    case (_p == "end"): {_mo.c = _property[_p] - _mo.b;}
+                    case (_p == "unit"): _mo.unit = _property[_p];
+                  }
                  }
               // If not use the value as the end
               }else{
@@ -215,7 +221,6 @@ Tween.prototype = {
                 // Add this and the adjusted frame step to the tween value
                 this._t = this._delta + this._t;
                 // Continue to the next step
-                //this.animationFrame = window.requestAnimationFrame(this._update.bind(this));
                 this._setProperties();
             // If we are at the end of the tween
             }else{
@@ -239,7 +244,7 @@ Tween.prototype = {
               this._stop();
             }
           }
-        // If there is an onAnimate callback
+        // If there is an onUpdate callback
         // Change the time
         this._previousTime = this._currentTime;
 
@@ -252,24 +257,26 @@ Tween.prototype = {
    */
    _setProperties:function(){
       // Iterate through the motion stack to get all our motion objects
-      for (var tween in this._motionStack){
+     var i, len = this._motionStack.length;
+
+      for (i = 0; i < len; ++i){
           // Assign a temporary motion object
-          var motionObject = this._motionStack[tween];
+          var motionObject = this._motionStack[i];
           // If it has a property value
           if (motionObject.prop != null){
               // Assign the value to the tween return value
               this.node.style[motionObject.prop] = this.easing( this._t, motionObject.b, motionObject.c, this._endTime) + motionObject.unit;
-              // If there is an onAnimate function return the tween with a beginning of 0 and an end of 1
-              if (this.onAnimate != null) var c = this.easing( this._t, 0, 1, this.duration);
+              // If there is an onUpdate function return the tween with a beginning of 0 and an end of 1
+              if (this.onUpdate != null) var c = this.easing( this._t, 0, 1, this.duration);
           // If there is no property value and only a curve value
           }else{
               // If we only have one curve
               if(this._motionStack.length == 1){
-                  // Assign the onAnimate parameter to the one curve
+                  // Assign the onUpdate parameter to the one curve
                   var c = this.easing( this._t, motionObject.b, motionObject.c, this.duration);
               // If there are multiple curves
               }else{
-                  // Assign the onAnimate parameter to an empty array
+                  // Assign the onUpdate parameter to an empty array
                   var c = [];
                   // Iterate through the motionObjects
                   for (var motionObject in this._motionStack){
@@ -279,7 +286,7 @@ Tween.prototype = {
                   }
               }
            }
-           if (this.onAnimate != null) this.onAnimate(c);
+           if (this.onUpdate != null) this.onUpdate(c);
         }
    },
   /**
@@ -314,7 +321,7 @@ Tween.prototype = {
    */
 
    reverse:function(){
-     this.isReversed = (this.isReversed == false) ? this.isReversed = true : this.isReversed = false;
+     this.isReversed = !this.isReversed;
    },
 
   /**
@@ -334,6 +341,14 @@ Tween.prototype = {
      // Resume the tween
      this._update();
    },
+
+  /**
+   * the user can manually add a wait method to a tween which would delay the 
+   * progress mid-tween
+   * @public {object}    Tween.wait
+   *
+   */
+
 
   /**
    * Pauses the tween 

@@ -11,7 +11,7 @@ module.exports = function(grunt){
     },
     watch:{
       source:{
-        files: ['./examples/src/**/*.js'],
+        files: ['./examples/src/**/*.js', './kettle-tween.js'],
         tasks: ['browserify:examples']
       },
       options:{
@@ -21,7 +21,8 @@ module.exports = function(grunt){
     browserify:{
       examples:{
         files:{
-          "./examples/js/bundle.js" : ['./examples/src/app.js']
+          "./examples/js/bundle-simple.js" : ['./examples/src/simple-tween.js'],
+          "./examples/js/bundle-timeline.js" : ['./examples/src/timeline.js'],
         },
       },
       build:{

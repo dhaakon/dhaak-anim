@@ -1,8 +1,4 @@
-var TweenManager = function(){
-  this.init();
-}
-
-var __prototype = {
+var TweenManager = {
   // PROPERTIES
   _tweens:[],
   _timelines:[],
@@ -14,11 +10,9 @@ var __prototype = {
   update:function(){},
 
   // EVENTS
-  onLoad:function(){},
   onTweenComplete:function(){},
   onTimelineComplete:function(){}
 };
 
-_.extend(TweenManager.prototype, __prototype);
 
-module.exports = new TweenManager();
+module.exports = TweenManager;

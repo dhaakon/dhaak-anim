@@ -1,116 +1,161 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function init(){
 //var Tween = require("kettle-tween");
-var Tween = require("../../kettle-tween.js");
+  var Stats = require("stats-js");
+  var Tween = require("../../kettle-tween.js");
+  var Easing = require('kettle-ease') ;
 
-var Easing = require('kettle-ease') ;
-var _ = require("underscore");
+  var _ = require("underscore");
 
-//var animMeter = require("./animationCounter.js").animMeter;
-//var fpsDisplay = animMeter('fps-counter');
+  var line = Tween.Line;
+  var tweens = [];
+  var numBoxes = 3;
+  var count = 0;
+  var easeFunc = "Quint";
 
-var line = Tween.Line;
-var tweens = [];
+  var _easing = [
+    //easeInElastic:Easing.easeInElastic,
+    Easing["easeIn" + easeFunc],
+    Easing["easeInOut" + easeFunc],
+    Easing["easeOut" + easeFunc],
+  ];
 
-window.onclick = function(){
-  for(var tween in tweens){
-    var _tween = tweens[tween];
-    if (!_tween.isAnimating) _tween.play();
-  }
-}
+  function createStats(){
+    var loop, stats = new Stats();
 
-easeFunc = "Expo";
+    stats.domElement.style.position = 'absolute';
+    stats.domElement.style.left = '0px';
+    stats.domElement.style.top = '0px';
+    stats.domElement.style.zIndex = 10000;
 
-var _easing = [
-  //easeInElastic:Easing.easeInElastic,
-  Easing["easeIn" + easeFunc],
-  Easing["easeInOut" + easeFunc],
-  Easing["easeOut" + easeFunc],
-];
-
-function update(c){
-  var r = g = Math.round(c[0]);
-  var b = 255 - r;
-  this.mat = this.mat.translate(c[0], c[1], 1);
-  this.mat = this.mat.rotate(c[2]);
-
-  this.node.style.transform = this.mat.toString();
-  this.mat = new WebKitCSSMatrix();
-}
-
-//var prevTime = Date.now();
-
-function createTween(obj, ease, y, delay){
-  var t = new Tween();
-  var options = {
-    node: obj,
-    duration: 1500,
-    curve: new line([50, y, 0],[600, y, 720]),
-    onAnimate: update,
-    easing: ease,
-    mat:new WebKitCSSMatrix(),
-    delay:delay || 0,
-    onBegin:function(){
-      this.prevTime = Date.now();
-    },
-    onEnd:function(){
-      var diff = this.duration - (Date.now() - this.prevTime);
-      this.reverse();
-
-      var startValues = [600, y, 0];
-      var finishValues = [600, y + 600, 0];
-
-      //this.play();
-      //setTimeout( function(){this.play()}.bind(this), this.delay);
-      this.prevTime = Date.now();
+    document.body.appendChild(stats.domElement);
+    loop = function(){
+      stats.begin();
+      window.requestAnimationFrame(loop);
+      stats.end();
     }
-  };
 
-  t.play(options);
-  tweens.push(t);
-}
+    loop();
+  }
 
-var count = 0;
+  //createStats();
 
-function createBox(){
-  var _obj = document.createElement("div");
+  function update(c){
+    var r = g = Math.round(c[0]);
+    var b = 255 - r;
 
-  _obj.style.background = "red";
-  _obj.style.position = "absolute";
-  _obj.style['-webkit-transform'] = "translate3d( 50px, " + y + "px, 0px)";
-  _obj.style.width = "20px";
-  _obj.style.height = "20px";
+    this.mat = this.mat.translate(c[0], c[1], 1);
+    this.mat = this.mat.rotate(c[2]);
 
-  document.body.appendChild(_obj);
-  return _obj;
-}
+    //this.node.style.transform = this.mat.toString();
+    this.node.style.transform = "translate3d(" + c[0] + "px, " + c[1] + "px, 0px) rotate(" + c[2] + "deg)";
+    this.mat = new WebKitCSSMatrix();
+  }
 
-var numBoxes = 27;
+  //var prevTime = Date.now();
 
-while(numBoxes > 0){
-  var _ease = _easing[count % 3];
-  var y = (count * 22);
-  //var _delay = count
-  createTween( createBox(), _ease, y );
+  function createTween(obj, ease, y, delay, duration){
+    var t = new Tween();
 
-  count++;
-  numBoxes--;
-}
+    var options = {
+      node: obj,
+      duration: duration || 1000,
+      curve: new line([50, y, 0],[600, y, 720]),
+      onUpdate: update,
+      easing: ease,
+      mat:new WebKitCSSMatrix(),
+      delay:delay || 0,
+      onBegin:function(){
+        this.prevTime = Date.now();
+      },
+      onEnd:function(){
+        var diff = this.duration - (Date.now() - this.prevTime);
+        this.reverse();
+
+        var startValues = [600, y, 0];
+        var finishValues = [600, y + 600, 0];
+
+        this.play();
+        //setTimeout( function(){this.play()}.bind(this), this.delay);
+        this.prevTime = Date.now();
+      }
+    };
+
+    _.extend(t, options)
+    t.play();
+    tweens.push(t);
+  }
+
+  function createBox(){
+    var _obj = document.createElement("div");
+
+    _obj.style.background = "red";
+    _obj.style.position = "absolute";
+    _obj.style['-webkit-transform'] = "translate3d( 50px, " + y + "px, 0px)";
+    _obj.style.width = "20px";
+    _obj.style.height = "20px";
+
+    document.body.appendChild(_obj);
+    return _obj;
+  }
+
+  while(numBoxes > 0){
+    var _ease = _easing[count % 3];
+    var y = (count * 22);
+    //var _delay = count * 10
+    //var _delay = 0;
+    //var _duration = 500 + (count * 50)
+    createTween( createBox(), _ease, y );
+
+    count++;
+    numBoxes--;
+  }
+
+  window.onclick = function(){
+    for(var tween in tweens){
+      var _tween = tweens[tween];
+      console.log(_tween);
+      if (!_tween.isAnimating) _tween.play();
+    }
+  }
 
 
-},{"../../kettle-tween.js":2,"kettle-ease":3,"underscore":4}],2:[function(require,module,exports){
+})();
+
+},{"../../kettle-tween.js":3,"kettle-ease":4,"stats-js":5,"underscore":6}],2:[function(require,module,exports){
+var TweenManager = {
+  // PROPERTIES
+  _tweens:[],
+  _timelines:[],
+
+  // METHODS
+  init:function(){},
+  add:function(){},
+  delete:function(){},
+  update:function(){},
+
+  // EVENTS
+  onTweenComplete:function(){},
+  onTimelineComplete:function(){}
+};
+
+
+module.exports = TweenManager;
+
+},{}],3:[function(require,module,exports){
 /** 
- *    @constructor 
+ *    @constructor
  *    @description A lightweight <b>Tween</b> class independant of Third Party libraries (aside from Robert Penner's easing functions). The engine has Paul Irish's
  *    requestAnimFrame shim built in allowing for consistent animations across browsers and devices.
  *    <br>
- *    @example     
+ *    @example
  *    <b><u>Properties Example</b></u>
  *
  *    var tween = new Tween();
  *    target = document.getElementById("target");
  *
  *    var propertyOptions = {
- *       node: target, 
+ *       node: target,
  *       duration: 1000,
  *       properties:{height:{start:300, end:4000, unit:"px"},
  *                   width:{start:200, end:3000, unit:"px"}},
@@ -133,7 +178,7 @@ while(numBoxes > 0){
  *       node: target, 
  *       duration: 1000,
  *       curve:[0, 100],
- *       onAnimate:function(c){
+ *       onUpdate:function(c){
  *        this.node.style.width = c + "px"
  *    }
  *
@@ -150,7 +195,7 @@ while(numBoxes > 0){
  *       node: target, 
  *       duration: 1000,
  *       curve:new Line([0, 0],[100,200]),
- *       onAnimate:function(c){
+ *       onUpdate:function(c){
  *        this.node.style.width = c[0] + "px"
  *        this.node.style.left = c[1] + "px"
  *       }
@@ -161,7 +206,7 @@ while(numBoxes > 0){
  *
  *    @property {function} onEnd A function to be called at the end of the Tween.
  *    @property {function} onBegin A function to be called at the beginning of the Tween.
- *    @property {function} onAnimate A function to be called at every step of the Tween.
+ *    @property {function} onUpdate A function to be called at every step of the Tween.
  *    @property {number} delay The delay before the  Tween starts.
  *    @property {boolean} isAnimating (read-only) Boolean determining if the Tween is in animating state.
  *    @property {boolean} isReversed (read-only) Boolean determining if the Tween is reversed.
@@ -183,7 +228,7 @@ while(numBoxes > 0){
 var Tween = function(){
   this.onEnd = null;
   this.onBegin = null; 
-  this.onAnimate = null;
+  this.onUpdate = null;
   this.delay = 0;
   this.node = null;
   this.duration = 0;
@@ -193,6 +238,7 @@ var Tween = function(){
   this.properties = null;  
   this.curve = [0, 1];
   this.overshoot = 0;
+  this._manager = require('./kettle-tween-manager.js');
   this.easing = function(t, b, c, d){
     return c*t/d + b;
   };
@@ -219,8 +265,9 @@ Tween.prototype = {
    */
    _setMotionFromCurve:function(){
     var c = this.curve;
+    console.log('setting motion');
 
-    if (c instanceof Tween.Line == false){
+    if (!c instanceof Tween.Line){
       var _mo = new MotionObject();
       _mo.d = this.duration;
       _mo.b = c[0];
@@ -230,7 +277,9 @@ Tween.prototype = {
         var _c1 = c.curves[0];
         var _c2 = c.curves[1];
 
-        for (var i = 0; i < _c1.length; ++i){
+        var len = _c1.length;
+
+        for (var i = 0; i < len; ++i){
           var _mo = new MotionObject();
 
           _mo.b = _c1[i];
@@ -258,9 +307,11 @@ Tween.prototype = {
               //
               if (typeof _property == "object"){
                 for(var _p in _property){
-                    if (_p == "begin") _mo.b = _property[_p];
-                    if (_p == "end") {_mo.c = _property[_p] - _mo.b;}
-                    if (_p == "unit") _mo.unit = _property[_p];
+                  switch(_p){
+                    case (_p == "begin"): _mo.b = _property[_p];
+                    case (_p == "end"): {_mo.c = _property[_p] - _mo.b;}
+                    case (_p == "unit"): _mo.unit = _property[_p];
+                  }
                  }
               // If not use the value as the end
               }else{
@@ -315,7 +366,6 @@ Tween.prototype = {
                 // Add this and the adjusted frame step to the tween value
                 this._t = this._delta + this._t;
                 // Continue to the next step
-                //this.animationFrame = window.requestAnimationFrame(this._update.bind(this));
                 this._setProperties();
             // If we are at the end of the tween
             }else{
@@ -339,7 +389,7 @@ Tween.prototype = {
               this._stop();
             }
           }
-        // If there is an onAnimate callback
+        // If there is an onUpdate callback
         // Change the time
         this._previousTime = this._currentTime;
 
@@ -352,24 +402,26 @@ Tween.prototype = {
    */
    _setProperties:function(){
       // Iterate through the motion stack to get all our motion objects
-      for (var tween in this._motionStack){
+     var i, len = this._motionStack.length;
+
+      for (i = 0; i < len; ++i){
           // Assign a temporary motion object
-          var motionObject = this._motionStack[tween];
+          var motionObject = this._motionStack[i];
           // If it has a property value
           if (motionObject.prop != null){
               // Assign the value to the tween return value
               this.node.style[motionObject.prop] = this.easing( this._t, motionObject.b, motionObject.c, this._endTime) + motionObject.unit;
-              // If there is an onAnimate function return the tween with a beginning of 0 and an end of 1
-              if (this.onAnimate != null) var c = this.easing( this._t, 0, 1, this.duration);
+              // If there is an onUpdate function return the tween with a beginning of 0 and an end of 1
+              if (this.onUpdate != null) var c = this.easing( this._t, 0, 1, this.duration);
           // If there is no property value and only a curve value
           }else{
               // If we only have one curve
               if(this._motionStack.length == 1){
-                  // Assign the onAnimate parameter to the one curve
+                  // Assign the onUpdate parameter to the one curve
                   var c = this.easing( this._t, motionObject.b, motionObject.c, this.duration);
               // If there are multiple curves
               }else{
-                  // Assign the onAnimate parameter to an empty array
+                  // Assign the onUpdate parameter to an empty array
                   var c = [];
                   // Iterate through the motionObjects
                   for (var motionObject in this._motionStack){
@@ -379,7 +431,7 @@ Tween.prototype = {
                   }
               }
            }
-           if (this.onAnimate != null) this.onAnimate(c);
+           if (this.onUpdate != null) this.onUpdate(c);
         }
    },
   /**
@@ -414,7 +466,7 @@ Tween.prototype = {
    */
 
    reverse:function(){
-     this.isReversed = (this.isReversed == false) ? this.isReversed = true : this.isReversed = false;
+     this.isReversed = !this.isReversed;
    },
 
   /**
@@ -434,6 +486,14 @@ Tween.prototype = {
      // Resume the tween
      this._update();
    },
+
+  /**
+   * the user can manually add a wait method to a tween which would delay the 
+   * progress mid-tween
+   * @public {object}    Tween.wait
+   *
+   */
+
 
   /**
    * Pauses the tween 
@@ -534,7 +594,7 @@ window.requestAnimFrame = (function(){
 })();
 module.exports = Tween 
 
-},{}],3:[function(require,module,exports){
+},{"./kettle-tween-manager.js":2}],4:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -681,7 +741,15 @@ module.exports = {
 	}
 };
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
+// stats.js - http://github.com/mrdoob/stats.js
+var Stats=function(){var l=Date.now(),m=l,g=0,n=Infinity,o=0,h=0,p=Infinity,q=0,r=0,s=0,f=document.createElement("div");f.id="stats";f.addEventListener("mousedown",function(b){b.preventDefault();t(++s%2)},!1);f.style.cssText="width:80px;opacity:0.9;cursor:pointer";var a=document.createElement("div");a.id="fps";a.style.cssText="padding:0 0 3px 3px;text-align:left;background-color:#002";f.appendChild(a);var i=document.createElement("div");i.id="fpsText";i.style.cssText="color:#0ff;font-family:Helvetica,Arial,sans-serif;font-size:9px;font-weight:bold;line-height:15px";
+i.innerHTML="FPS";a.appendChild(i);var c=document.createElement("div");c.id="fpsGraph";c.style.cssText="position:relative;width:74px;height:30px;background-color:#0ff";for(a.appendChild(c);74>c.children.length;){var j=document.createElement("span");j.style.cssText="width:1px;height:30px;float:left;background-color:#113";c.appendChild(j)}var d=document.createElement("div");d.id="ms";d.style.cssText="padding:0 0 3px 3px;text-align:left;background-color:#020;display:none";f.appendChild(d);var k=document.createElement("div");
+k.id="msText";k.style.cssText="color:#0f0;font-family:Helvetica,Arial,sans-serif;font-size:9px;font-weight:bold;line-height:15px";k.innerHTML="MS";d.appendChild(k);var e=document.createElement("div");e.id="msGraph";e.style.cssText="position:relative;width:74px;height:30px;background-color:#0f0";for(d.appendChild(e);74>e.children.length;)j=document.createElement("span"),j.style.cssText="width:1px;height:30px;float:left;background-color:#131",e.appendChild(j);var t=function(b){s=b;switch(s){case 0:a.style.display=
+"block";d.style.display="none";break;case 1:a.style.display="none",d.style.display="block"}};return{REVISION:12,domElement:f,setMode:t,begin:function(){l=Date.now()},end:function(){var b=Date.now();g=b-l;n=Math.min(n,g);o=Math.max(o,g);k.textContent=g+" MS ("+n+"-"+o+")";var a=Math.min(30,30-30*(g/200));e.appendChild(e.firstChild).style.height=a+"px";r++;b>m+1E3&&(h=Math.round(1E3*r/(b-m)),p=Math.min(p,h),q=Math.max(q,h),i.textContent=h+" FPS ("+p+"-"+q+")",a=Math.min(30,30-30*(h/100)),c.appendChild(c.firstChild).style.height=
+a+"px",m=b,r=0);return b},update:function(){l=this.end()}}};"object"===typeof module&&(module.exports=Stats);
+
+},{}],6:[function(require,module,exports){
 //     Underscore.js 1.7.0
 //     http://underscorejs.org
 //     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors

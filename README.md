@@ -3,7 +3,7 @@ kettle-tween
 
 A simple tween class independant from third party libraries.
 
-### Getting Started
+# Getting Started
 
 ## Installation
 
@@ -41,7 +41,7 @@ var options = {
 	duration: 1000, // 1 second
 	node: circle, // the object to act on
 	curve: [start, end], // the curve object
-	onAnimate: function(c){
+	onUpdate: function(c){
 		this.node.style.left = c + "px";
 	}
 };
@@ -56,29 +56,35 @@ Kettle Tween relies on either a curve or line object in order to advance the ani
 
 `curve = [ 0, 100 ]`
 
-This onAnimate function will pass through a variable indicating the change value at the correct tween time.
+This onUpdate function will pass through a variable indicating the change value at the correct tween time.
+
+```
+var onUpdate = function(c){
+	this.node.style.left = c + "px";
+}
+```
 
 What if we wanted to pass in multiple values? That would be nice.
 
-We can with a Line object. A line object is an array containing an array of start and end values. The onAnimate function will then pass over an array with the curve values at the specific time.
+We can with a Line object. A line object is an array containing an array of start and end values. The onUpdate function will then pass over an array with the curve values at the specific time.
 
 Let's say we wanted to move the object 200 pixels left and rotate 30 degrees. We would first create the Line object:
 
 ```
 var startValues = [ 0, 0 ];
-var endValues = [ 200, 30];
-var line = new Tween.Line( startValues, endValues)
+var endValues = [ 200, 30 ];
+var line = new Tween.Line( startValues, endValues );
 ```
 
-Then the onAnimate function will pass over an array with the position (0 index) and the rotation (1 index) values:
+Then the onUpdate function will pass over an array with the position (0 index) and the rotation (1 index) values:
 
 ```
-var onAnimate = function(c){
+var onUpdate = function(c){
 	var positionValue = c[0];
 	var rotationValue = c[1];
 	
 	this.node.style.left = positionValue + "px";
-	this.node.style.transform = "rotate(" + rotationValue + "px, 0px, 0px)"
+	this.node.style.transform = "rotate(" + rotationValue + "deg)";
 }
 ```
 

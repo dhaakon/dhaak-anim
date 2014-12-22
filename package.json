@@ -1,6 +1,6 @@
 {
   "name": "kettle-tween",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Simple lightweight tween class.",
   "main": "kettle-tween.js",
   "scripts": {
@@ -30,6 +30,7 @@
     "grunt-contrib-watch": "^0.6.1",
     "grunt-open": "^0.2.3",
     "kettle-ease": "^0.1.0",
+    "stats-js": "^1.0.0-alpha1",
     "underscore": "^1.7.0"
   }
 }
