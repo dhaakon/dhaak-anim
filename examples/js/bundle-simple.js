@@ -225,7 +225,7 @@ module.exports = TweenManager;
  *    @property {array}  _motionStack (read-only) The motion objects which will be tweened.
  */
 
-var Tween = function(){
+var Tween = function( options ){
   this.onEnd = null;
   this.onBegin = null; 
   this.onUpdate = null;
@@ -249,6 +249,9 @@ var Tween = function(){
   this._delta = null; 
   this._t = 0;
   this._motionStack = null;
+  this.options = options;
+
+  if (options) this._setOptions(options);
 }
 
 Tween.prototype = {
@@ -256,6 +259,22 @@ Tween.prototype = {
       onEnd:[],
       onBegin:[],
       onComplete:[]
+   },
+   _setOptions:function(options){
+      for(var key in options){
+        this[key] = options[key];
+      }
+
+      this._endTime = this.duration;
+      // Grab the motion objects
+      if (this._motionStack == null){
+        this._motionStack = [];
+        if (this.properties != null) {
+          this._setMotionFromProperty();
+        }else{
+          this._setMotionFromCurve();
+        }
+      }
    },
    /**
     * Private method which creates a MotionObject based on the curves set in the Tween Options before the start of the tween.
@@ -265,9 +284,8 @@ Tween.prototype = {
    */
    _setMotionFromCurve:function(){
     var c = this.curve;
-    console.log('setting motion');
 
-    if (!c instanceof Tween.Line){
+    if (c instanceof Tween.Line !== true){
       var _mo = new MotionObject();
       _mo.d = this.duration;
       _mo.b = c[0];
@@ -355,6 +373,7 @@ Tween.prototype = {
         this._currentTime = Date.now();
         // Get the difference between the current time and the last time
         this._delta = this._currentTime - this._previousTime;
+        
         // Bottleneck the difference if it is too high
         this._delta = Math.min(this._delta, 25);
         //console.log(this._delta);
@@ -401,6 +420,7 @@ Tween.prototype = {
    *
    */
    _setProperties:function(){
+     //if(!this._motionStack) return;
       // Iterate through the motion stack to get all our motion objects
      var i, len = this._motionStack.length;
 
@@ -529,7 +549,6 @@ Tween.prototype = {
       if(options){
         // Iterate through the options
         for (var key in options){
-          
           // Assign our properties
           this[key] = options[key];
         }
@@ -547,9 +566,14 @@ Tween.prototype = {
       // Let her rip
       this._start();
     },
+
     setCurve:function(curve){
       this.curve = curve;
       this._setMotionFromCurve(curve);
+    },
+
+    setDuration:function( duration ){
+      this.duration = this._endTime = this._duration = duration;
     }
 }
 /**
