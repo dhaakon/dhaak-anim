@@ -2,6 +2,7 @@
 var Timeline = require('../../kettle-timeline.js');
 var Tween = require('../../kettle-tween.js');
 var Easing = require('kettle-ease');
+var _ = require('underscore');
 
 (function init(){
   console.log("Timeline example");
@@ -16,46 +17,88 @@ var Easing = require('kettle-ease');
   var mat = new WebKitCSSMatrix();
   var mat2 = new WebKitCSSMatrix();
 
+  var hr = new Array(70).join('=');
+  var hlr = new Array(70).join('-');
+
   document.body.appendChild(circle);
 
+  var marker = document.createElement("div");
+  var markerStyleOptions = {
+    "position" : "absolute",
+    "-webkit-transform":"translate(500px, -20px)",
+    "border":" 1px solid red",
+    "width":"20px",
+    "height":"20px",
+    "borderRadius":"10px",
+    "text-indent":"7px",
+    "font-size":"12px",
+    "line-height":"18px"
+  }
+
+
+  _.extend( marker.style, markerStyleOptions );
+  
+  var marker2 = document.createElement('div');
+  marker2options = _.clone(markerStyleOptions);
+
+  _.extend( marker2options, {"-webkit-transform" : "translate(500px, 280px)"});
+  _.extend( marker2.style, marker2options );
+
+  marker.innerHTML = "1";
+  marker2.innerHTML = "2";
+
+  document.body.appendChild(marker);
+  document.body.appendChild(marker2);
+
+
   var tween1options = {
-    duration: 700,
-    curve:[0, 400],
-    easing:Easing.linear,
+    duration: 1000,
+    curve:[0, 500],
+    easing:Easing.easeInOutBack,
+    onBegin:function(){
+      console.log(hr);
+      console.log("Tween 1 Starting");
+      console.log(hlr);
+    },
     onUpdate:function(c){
-      mat2 = mat.translate(c, 0, 0);
-      circle.style['-webkit-transform'] = mat2.toString();
+      mat = mat.translate(c, 0, 0);
+      circle.style['-webkit-transform'] = new WebKitCSSMatrix().translate(c,0,0).toString();
     },
     onEnd:function(){
-      mat = mat2;
+      console.log(hr);
       console.log("Tween 1 Completed");
+      console.log(hlr);
     }
   }
 
   var tween2options = {
-    duration: 150,
-    curve:[1, 2],
-    easing:Easing.linear,
+    duration: 1000,
+    curve:[1, 3],
+    easing:Easing.easeOutBounce,
     onUpdate:function(c){
-      mat2 = mat.scale(c,c,1)
-      circle.style['-webkit-transform'] = mat2.toString();
+      circle.style['-webkit-transform'] = new WebKitCSSMatrix(circle.style['-webkit-transform']).scale(c).toString();
     },
     onEnd:function(){
-      mat = mat2;
+      console.log(hr);
       console.log("Tween 2 Completed");
+      console.log(hlr);
     }
   }
 
   var tween3options = {
-    duration: 200,
-    curve:[0, 100],
-    easing:Easing.easeInOutBack,
+    duration: 1000,
+    curve:new Tween.Line([1,0],[0.3333339, 300]),
+    easing:Easing.easeOutBounce,
     onUpdate:function(c){
-      mat2 = mat.translate(0, c, 0);
-      circle.style['-webkit-transform'] = mat2.toString();
+      mat = new WebKitCSSMatrix(circle.style['-webkit-transform']);
+      mat2 = mat.translate(0, c[1]);
+      circle.style['-webkit-transform'] = new WebKitCSSMatrix().translate(500,c[1],0).toString();
     },
     onEnd:function(){
+      console.log(hr);
       console.log("Tween 3 Completed");
+      console.log(hlr);
+
     }
   }
 
@@ -68,12 +111,15 @@ var Easing = require('kettle-ease');
   }
 
   var timeline = new Timeline( options );
-  timeline.addTweens([tween1, tween2]);
+  timeline.addTweens([tween1, tween2, tween3]);
 
-  timeline.start();
+  setTimeout(function(){
+    timeline.start();
+  }, 200);
+
 })()
 
-},{"../../kettle-timeline.js":2,"../../kettle-tween.js":4,"kettle-ease":5}],2:[function(require,module,exports){
+},{"../../kettle-timeline.js":2,"../../kettle-tween.js":4,"kettle-ease":5,"underscore":6}],2:[function(require,module,exports){
 var _ = require("underscore");
 var Tween = require('./kettle-tween.js');
 
@@ -156,23 +202,24 @@ var __prototype = {
     for( i = 0; i < len; ++i ){
       var _t =  this._tweens[i];
       if(time > _t.start && time < _t.end){
-        console.log("time = " + time, _t.end);
         if (!_t.isPaused){ 
+          //console.log(_t.start, _t.end);
           //this._tween._t = _t.end;
-          //console.log(this._tween._t);
           
           if (this._tweens.indexOf(_t) !== this._currentTweenIdx){
-            this._previousTweenIdx = this.currentTweenIdx || 0;
+            this._previousTweenIdx = this._currentTweenIdx || 0;
 
             var _prevTween = this._tweens[this._previousTweenIdx];
             var _tmp = _prevTween.tween;
 
-            //if(!_tmp.isPaused) _tmp._update(_prevTween.end);
+            if(!_tmp.isAnimating && !_tmp.isCompleted) {
+              _tmp._stop();
+            }
           }
           
           this._currentTweenIdx = this._tweens.indexOf(_t);
           
-          return _t;
+          return this._tweens[this._currentTweenIdx];
         }
       }
     }
@@ -218,23 +265,25 @@ var __prototype = {
   },
 
   addTweenAt:function(tween, idx){},
-
   removeTween:function( tween ){},
 
   // EVENTS
   onBegin:function(){},
   onEnd:function(){
-    //this.reverse();
-    //this.play();
-  },
+    setTimeout(function(){
+    this.reverse();
+    this.play();}.bind(this), 
+    500);
+   },
 
   onUpdate:function(c){
     this._currentTime = c * this.duration;
     var _tweenReference = this._getTweenAtTime(~~this._currentTime);
+    //console.log(this._tween._t);
 
     if(_tweenReference){
       var _tween = _tweenReference.tween;
-      _tween._update(this._tween._t - _tween.start);
+      _tween._step(this._tween._t - _tweenReference.start);
     }
   },
 };
@@ -489,7 +538,8 @@ Tween.prototype = {
    *
    */
 
-   _step:function(){
+   _step:function(c){
+        if (c) this._t = c;
         // Get the current time
         this._currentTime = Date.now();
         // Get the difference between the current time and the last time
@@ -498,7 +548,6 @@ Tween.prototype = {
         // Bottleneck the difference if it is too high
         this._delta = Math.min(this._delta, 25);
         //console.log(this._delta);
-        if (!this.node) console.log(this._t + this._delta, this._endTime);
 
         // If we are moving forward
         if (!this.isReversed){
@@ -584,6 +633,7 @@ Tween.prototype = {
 
    _stop:function(){
     this.isAnimating = false;
+    this.isCompleted = true;
     window.cancelAnimationFrame(this.animationFrame);
     if (this.onEnd != null && !this.isPaused) this.onEnd();
    },

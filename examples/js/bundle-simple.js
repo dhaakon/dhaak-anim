@@ -368,7 +368,8 @@ Tween.prototype = {
    *
    */
 
-   _step:function(){
+   _step:function(c){
+        if (c) this._t = c;
         // Get the current time
         this._currentTime = Date.now();
         // Get the difference between the current time and the last time
@@ -377,7 +378,6 @@ Tween.prototype = {
         // Bottleneck the difference if it is too high
         this._delta = Math.min(this._delta, 25);
         //console.log(this._delta);
-        if (!this.node) console.log(this._t + this._delta, this._endTime);
 
         // If we are moving forward
         if (!this.isReversed){
@@ -463,6 +463,7 @@ Tween.prototype = {
 
    _stop:function(){
     this.isAnimating = false;
+    this.isCompleted = true;
     window.cancelAnimationFrame(this.animationFrame);
     if (this.onEnd != null && !this.isPaused) this.onEnd();
    },
