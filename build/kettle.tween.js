@@ -1,3 +1,24 @@
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var TweenManager = {
+  // PROPERTIES
+  _tweens:[],
+  _timelines:[],
+
+  // METHODS
+  init:function(){},
+  add:function(){},
+  delete:function(){},
+  update:function(){},
+
+  // EVENTS
+  onTweenComplete:function(){},
+  onTimelineComplete:function(){}
+};
+
+
+module.exports = TweenManager;
+
+},{}],2:[function(require,module,exports){
 /** 
  *    @constructor
  *    @description A lightweight <b>Tween</b> class independant of Third Party libraries (aside from Robert Penner's easing functions). The engine has Paul Irish's
@@ -232,12 +253,11 @@ Tween.prototype = {
         // Bottleneck the difference if it is too high
         this._delta = Math.min(this._delta, 25);
         //console.log(this._delta);
-        if (!this.node) console.log(this._t + this._delta, this._endTime);
 
         // If we are moving forward
         if (!this.isReversed){
-            // If the time and the difference is less than the duration
-            if (this._t + this._delta < this._endTime ){
+            // If the time and the difference is les:s than the duration
+            if (this._t + this._delta < this._endTime){
                 // Add this and the adjusted frame step to the tween value
                 this._t = this._delta + this._t;
                 // Continue to the next step
@@ -328,15 +348,10 @@ Tween.prototype = {
    *
    */
 
-   _update:function(time){
-    var self = this;
+   _update:function(c){
+     var self = this;
 
-    // Synchronizes the time
-    if (time) {
-      this._t = time;
-    }
-
-    if (this.isAnimating == true) this.animationFrame = window.requestAnimFrame(this._update.bind(this, time));
+    if (this.isAnimating == true) this.animationFrame = window.requestAnimFrame(this._update.bind(this));
     self._step();
    },
 
@@ -478,3 +493,5 @@ window.requestAnimFrame = (function(){
           };
 })();
 module.exports = Tween 
+
+},{"./kettle-tween-manager.js":1}]},{},[2]);

@@ -10,7 +10,7 @@
   var tweens = [];
   var numBoxes = 3;
   var count = 0;
-  var easeFunc = "Quint";
+  var easeFunc = "Back";
 
   var _easing = [
     //easeInElastic:Easing.easeInElastic,
@@ -47,7 +47,7 @@
     this.mat = this.mat.rotate(c[2]);
 
     //this.node.style.transform = this.mat.toString();
-    this.node.style.transform = "translate3d(" + c[0] + "px, " + c[1] + "px, 0px) rotate(" + c[2] + "deg)";
+    this.node.style['-webkit-transform'] = "translate3d(" + c[0] + "px, " + c[1] + "px, 0px) rotate(" + c[2] + "deg)";
     this.mat = new WebKitCSSMatrix();
   }
 

@@ -11,7 +11,7 @@
   var tweens = [];
   var numBoxes = 3;
   var count = 0;
-  var easeFunc = "Quint";
+  var easeFunc = "Back";
 
   var _easing = [
     //easeInElastic:Easing.easeInElastic,
@@ -48,7 +48,7 @@
     this.mat = this.mat.rotate(c[2]);
 
     //this.node.style.transform = this.mat.toString();
-    this.node.style.transform = "translate3d(" + c[0] + "px, " + c[1] + "px, 0px) rotate(" + c[2] + "deg)";
+    this.node.style['-webkit-transform'] = "translate3d(" + c[0] + "px, " + c[1] + "px, 0px) rotate(" + c[2] + "deg)";
     this.mat = new WebKitCSSMatrix();
   }
 
@@ -377,11 +377,12 @@ Tween.prototype = {
         // Bottleneck the difference if it is too high
         this._delta = Math.min(this._delta, 25);
         //console.log(this._delta);
+        if (!this.node) console.log(this._t + this._delta, this._endTime);
 
         // If we are moving forward
         if (!this.isReversed){
-            // If the time and the difference is les:s than the duration
-            if (this._t + this._delta < this._endTime){
+            // If the time and the difference is less than the duration
+            if (this._t + this._delta < this._endTime ){
                 // Add this and the adjusted frame step to the tween value
                 this._t = this._delta + this._t;
                 // Continue to the next step
@@ -472,10 +473,15 @@ Tween.prototype = {
    *
    */
 
-   _update:function(c){
-     var self = this;
+   _update:function(time){
+    var self = this;
 
-    if (this.isAnimating == true) this.animationFrame = window.requestAnimFrame(this._update.bind(this));
+    // Synchronizes the time
+    if (time) {
+      this._t = time;
+    }
+
+    if (this.isAnimating == true) this.animationFrame = window.requestAnimFrame(this._update.bind(this, time));
     self._step();
    },
 

@@ -16,6 +16,7 @@ var __prototype = {
   _previousTween:null,
   _nextTween:null,
 
+  _currentTweenIdx: 0,
   _numTweens:0,
 
   // The main tween object which advances the timeline
@@ -55,6 +56,7 @@ var __prototype = {
   _setupMainTween:function(){
     var options = {
       node:this,
+      //easing:require('kettle-ease').easerOutBack,
       onUpdate:this.onUpdate.bind(this),
       onBegin:this.onBegin,
       onEnd:this.onEnd,
@@ -73,10 +75,29 @@ var __prototype = {
   _getTweenAtTime:function(time){
     var i; len = this._tweens.length;
 
-    for( i = 0; i < len; ++i){
+    time = ~~time + this._tween._delta;
+
+    for( i = 0; i < len; ++i ){
       var _t =  this._tweens[i];
       if(time > _t.start && time < _t.end){
-        return _t;
+        console.log("time = " + time, _t.end);
+        if (!_t.isPaused){ 
+          //this._tween._t = _t.end;
+          //console.log(this._tween._t);
+          
+          if (this._tweens.indexOf(_t) !== this._currentTweenIdx){
+            this._previousTweenIdx = this.currentTweenIdx || 0;
+
+            var _prevTween = this._tweens[this._previousTweenIdx];
+            var _tmp = _prevTween.tween;
+
+            //if(!_tmp.isPaused) _tmp._update(_prevTween.end);
+          }
+          
+          this._currentTweenIdx = this._tweens.indexOf(_t);
+          
+          return _t;
+        }
       }
     }
   },
@@ -133,11 +154,11 @@ var __prototype = {
 
   onUpdate:function(c){
     this._currentTime = c * this.duration;
-    var _tweenReference = this._getTweenAtTime(this._currentTime);
+    var _tweenReference = this._getTweenAtTime(~~this._currentTime);
 
     if(_tweenReference){
       var _tween = _tweenReference.tween;
-      _tween._update();
+      _tween._update(this._tween._t - _tween.start);
     }
   },
 };

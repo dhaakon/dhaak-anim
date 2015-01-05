@@ -19,12 +19,12 @@ var Easing = require('kettle-ease');
   document.body.appendChild(circle);
 
   var tween1options = {
-    duration: 500,
-    curve:[0, 1200],
-    easing:Easing.easeInOutCirc,
+    duration: 700,
+    curve:[0, 400],
+    easing:Easing.linear,
     onUpdate:function(c){
       mat2 = mat.translate(c, 0, 0);
-      circle.style.transform = mat2.toString();
+      circle.style['-webkit-transform'] = mat2.toString();
     },
     onEnd:function(){
       mat = mat2;
@@ -34,11 +34,11 @@ var Easing = require('kettle-ease');
 
   var tween2options = {
     duration: 150,
-    curve:[1, 1],
-    easing:Easing.easeOutBounce,
+    curve:[1, 2],
+    easing:Easing.linear,
     onUpdate:function(c){
       mat2 = mat.scale(c,c,1)
-      circle.style.transform = mat2.toString();
+      circle.style['-webkit-transform'] = mat2.toString();
     },
     onEnd:function(){
       mat = mat2;
@@ -52,7 +52,7 @@ var Easing = require('kettle-ease');
     easing:Easing.easeInOutBack,
     onUpdate:function(c){
       mat2 = mat.translate(0, c, 0);
-      circle.style.transform = mat2.toString();
+      circle.style['-webkit-transform'] = mat2.toString();
     },
     onEnd:function(){
       console.log("Tween 3 Completed");
@@ -68,7 +68,7 @@ var Easing = require('kettle-ease');
   }
 
   var timeline = new Timeline( options );
-  timeline.addTweens([tween1, tween2, tween3]);
+  timeline.addTweens([tween1, tween2]);
 
   timeline.start();
 })()
@@ -92,6 +92,7 @@ var __prototype = {
   _previousTween:null,
   _nextTween:null,
 
+  _currentTweenIdx: 0,
   _numTweens:0,
 
   // The main tween object which advances the timeline
@@ -131,6 +132,7 @@ var __prototype = {
   _setupMainTween:function(){
     var options = {
       node:this,
+      //easing:require('kettle-ease').easerOutBack,
       onUpdate:this.onUpdate.bind(this),
       onBegin:this.onBegin,
       onEnd:this.onEnd,
@@ -149,10 +151,29 @@ var __prototype = {
   _getTweenAtTime:function(time){
     var i; len = this._tweens.length;
 
-    for( i = 0; i < len; ++i){
+    time = ~~time + this._tween._delta;
+
+    for( i = 0; i < len; ++i ){
       var _t =  this._tweens[i];
       if(time > _t.start && time < _t.end){
-        return _t;
+        console.log("time = " + time, _t.end);
+        if (!_t.isPaused){ 
+          //this._tween._t = _t.end;
+          //console.log(this._tween._t);
+          
+          if (this._tweens.indexOf(_t) !== this._currentTweenIdx){
+            this._previousTweenIdx = this.currentTweenIdx || 0;
+
+            var _prevTween = this._tweens[this._previousTweenIdx];
+            var _tmp = _prevTween.tween;
+
+            //if(!_tmp.isPaused) _tmp._update(_prevTween.end);
+          }
+          
+          this._currentTweenIdx = this._tweens.indexOf(_t);
+          
+          return _t;
+        }
       }
     }
   },
@@ -209,11 +230,11 @@ var __prototype = {
 
   onUpdate:function(c){
     this._currentTime = c * this.duration;
-    var _tweenReference = this._getTweenAtTime(this._currentTime);
+    var _tweenReference = this._getTweenAtTime(~~this._currentTime);
 
     if(_tweenReference){
       var _tween = _tweenReference.tween;
-      _tween._update();
+      _tween._update(this._tween._t - _tween.start);
     }
   },
 };
@@ -477,11 +498,12 @@ Tween.prototype = {
         // Bottleneck the difference if it is too high
         this._delta = Math.min(this._delta, 25);
         //console.log(this._delta);
+        if (!this.node) console.log(this._t + this._delta, this._endTime);
 
         // If we are moving forward
         if (!this.isReversed){
-            // If the time and the difference is les:s than the duration
-            if (this._t + this._delta < this._endTime){
+            // If the time and the difference is less than the duration
+            if (this._t + this._delta < this._endTime ){
                 // Add this and the adjusted frame step to the tween value
                 this._t = this._delta + this._t;
                 // Continue to the next step
@@ -572,10 +594,15 @@ Tween.prototype = {
    *
    */
 
-   _update:function(c){
-     var self = this;
+   _update:function(time){
+    var self = this;
 
-    if (this.isAnimating == true) this.animationFrame = window.requestAnimFrame(this._update.bind(this));
+    // Synchronizes the time
+    if (time) {
+      this._t = time;
+    }
+
+    if (this.isAnimating == true) this.animationFrame = window.requestAnimFrame(this._update.bind(this, time));
     self._step();
    },
 

@@ -18,12 +18,12 @@ var Easing = require('kettle-ease');
   document.body.appendChild(circle);
 
   var tween1options = {
-    duration: 500,
-    curve:[0, 1200],
-    easing:Easing.easeInOutCirc,
+    duration: 700,
+    curve:[0, 400],
+    easing:Easing.linear,
     onUpdate:function(c){
       mat2 = mat.translate(c, 0, 0);
-      circle.style.transform = mat2.toString();
+      circle.style['-webkit-transform'] = mat2.toString();
     },
     onEnd:function(){
       mat = mat2;
@@ -33,11 +33,11 @@ var Easing = require('kettle-ease');
 
   var tween2options = {
     duration: 150,
-    curve:[1, 1],
-    easing:Easing.easeOutBounce,
+    curve:[1, 2],
+    easing:Easing.linear,
     onUpdate:function(c){
       mat2 = mat.scale(c,c,1)
-      circle.style.transform = mat2.toString();
+      circle.style['-webkit-transform'] = mat2.toString();
     },
     onEnd:function(){
       mat = mat2;
@@ -51,7 +51,7 @@ var Easing = require('kettle-ease');
     easing:Easing.easeInOutBack,
     onUpdate:function(c){
       mat2 = mat.translate(0, c, 0);
-      circle.style.transform = mat2.toString();
+      circle.style['-webkit-transform'] = mat2.toString();
     },
     onEnd:function(){
       console.log("Tween 3 Completed");
@@ -67,7 +67,7 @@ var Easing = require('kettle-ease');
   }
 
   var timeline = new Timeline( options );
-  timeline.addTweens([tween1, tween2, tween3]);
+  timeline.addTweens([tween1, tween2]);
 
   timeline.start();
 })()
