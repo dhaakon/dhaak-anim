@@ -234,10 +234,12 @@ Tween.prototype = {
         this._delta = Math.min(this._delta, 25);
         //console.log(this._delta);
 
+        var offsetTime = (this.offsetTime) ? this.offsetTime : this._t + this._delta;
+
         // If we are moving forward
         if (!this.isReversed){
             // If the time and the difference is less than the duration
-            if (this._t + this._delta < this._endTime ){
+            if ( offsetTime < this._endTime ){
                 // Add this and the adjusted frame step to the tween value
                 this._t = this._delta + this._t;
                 // Continue to the next step
@@ -320,6 +322,11 @@ Tween.prototype = {
     this.isAnimating = false;
     this.isCompleted = true;
     window.cancelAnimationFrame(this.animationFrame);
+    
+    this._t = (this.isReversed) ? 0 : this.duration;
+    this._setProperties();
+
+
     if (this.onEnd != null && !this.isPaused) this.onEnd();
    },
 
@@ -478,4 +485,5 @@ window.requestAnimFrame = (function(){
                   window.setTimeout(callback, 1000 / 60);
           };
 })();
-module.exports = Tween 
+
+module.exports = Tween;

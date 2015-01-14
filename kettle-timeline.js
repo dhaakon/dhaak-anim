@@ -59,7 +59,7 @@ var __prototype = {
       //easing:require('kettle-ease').easerOutBack,
       onUpdate:this.onUpdate.bind(this),
       onBegin:this.onBegin,
-      onEnd:this.onEnd,
+      onEnd:this.onEnd.bind(this),
       curve:[0,1]
     }
 
@@ -91,6 +91,7 @@ var __prototype = {
             var _tmp = _prevTween.tween;
 
             if(!_tmp.isAnimating && !_tmp.isCompleted) {
+              console.log('stopping');
               _tmp._stop();
             }
           }
@@ -148,20 +149,27 @@ var __prototype = {
   // EVENTS
   onBegin:function(){},
   onEnd:function(){
+    //this._tweens[this._tweens.length - 1]._stop();
+
     setTimeout(function(){
-    this.reverse();
-    this.play();}.bind(this), 
+      this._tween.reverse();
+      this._tween.play();
+    }.bind(this),
     500);
    },
 
   onUpdate:function(c){
     this._currentTime = c * this.duration;
+    console.log(this._currentTime);
     var _tweenReference = this._getTweenAtTime(~~this._currentTime);
     //console.log(this._tween._t);
 
     if(_tweenReference){
       var _tween = _tweenReference.tween;
-      _tween._step(this._tween._t - _tweenReference.start);
+      var _inputTime = this._tween._t - _tweenReference.start;
+      _tween.inputTime = _inputTime;
+      //console.log(this._tween._t - _tweenReference.start);
+      _tween._step(_inputTime);
     }
   },
 };

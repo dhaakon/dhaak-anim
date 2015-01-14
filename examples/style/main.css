@@ -1,0 +1,52 @@
+*{
+  -webkit-margin-before:0;
+  -webkit-margin-after:0;
+}
+
+body{
+  padding:0;
+  margin:0;
+  height:12000px;
+}
+
+#stage{
+  position:fixed;
+  width: 100%;
+  height: 100px;
+  /*position:absolute;*/
+  top:0px;
+  left:0px;
+  background:lightGrey;
+  border:1px solid black;
+  padding:0;
+  margin:0;
+}
+
+#hero{
+  width : 20px;
+  height : 100px;
+  display : block;
+  background : red;
+  position : absolute;
+  left:0px;
+}
+
+button{
+  margin: 0px auto;
+  display:inline-block;
+  height: 32px;
+  width : 64px;
+}
+
+#ui{
+  position:fixed;
+  top:10px;
+  left:10px;
+  width:188px;
+  display:block;
+}
+
+svg{
+  position:fixed;
+  top:100px;
+}

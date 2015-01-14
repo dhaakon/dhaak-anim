@@ -2,9 +2,11 @@ var Timeline = require('../../kettle-timeline.js');
 var Tween = require('../../kettle-tween.js');
 var Easing = require('kettle-ease');
 var _ = require('underscore');
+var d3 = require('d3');
 
 (function init(){
   console.log("Timeline example");
+
 
   var circle = document.createElement("div");
   circle.style.width = "20px";
@@ -33,7 +35,6 @@ var _ = require('underscore');
     "font-size":"12px",
     "line-height":"18px"
   }
-
 
   _.extend( marker.style, markerStyleOptions );
   
@@ -75,7 +76,7 @@ var _ = require('underscore');
     curve:[1, 3],
     easing:Easing.easeOutBounce,
     onUpdate:function(c){
-      circle.style['-webkit-transform'] = new WebKitCSSMatrix(circle.style['-webkit-transform']).scale(c).toString();
+      //circle.style['-webkit-transform'] = new WebKitCSSMatrix(circle.style['-webkit-transform']).scale(c).toString();
     },
     onEnd:function(){
       console.log(hr);
