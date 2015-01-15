@@ -5,7 +5,7 @@ var _ = require('underscore');
 var d3 = require('d3');
 var _str = require('sprintf').vsprintf;
 
-var simpleLogger = require('../../node_modules/kettle-simple-logger/kettle-simple-logger.js');
+//var simpleLogger = require('../../node_modules/kettle-simple-logger/kettle-simple-logger.js');
 
 var stage = document.getElementById('stage');
 var playButton = document.getElementById('toggle-animation-button');
@@ -69,8 +69,8 @@ if (!isCSS) {
 }
 
 // Create the simple logger
-simpleLogger.init( loggerOptions );
-simpleLogger.disable();
+//simpleLogger.init( loggerOptions );
+//simpleLogger.disable();
 
 (function init(){
   var endPosition = null;
@@ -176,8 +176,8 @@ simpleLogger.disable();
   windowWidth = parseInt(window.getComputedStyle(stage).getPropertyValue('width')) - parseInt(window.getComputedStyle(hero).getPropertyValue('width'));
 
   var onBeginHandler = function(){
-    simpleLogger.out(hr);
-    simpleLogger.out("Tween Started");
+    //simpleLogger.out(hr);
+    //simpleLogger.out("Tween Started");
 
     this._motionStack[0].c = windowWidth;
 
@@ -185,17 +185,17 @@ simpleLogger.disable();
   };
 
   var onEndHandler = function(){
-    simpleLogger.out(hlr);
-    simpleLogger.out("Tween Completed");
+    //simpleLogger.out(hlr);
+    //simpleLogger.out("Tween Completed");
 
     end = Date.now();
 
-    simpleLogger.out(hr);
-    simpleLogger.out("Start Time: \t" + start);
-    simpleLogger.out("End Time: \t" + end);
-    simpleLogger.out("Duration: \t" + this.duration);
-    simpleLogger.out("Time Offset: \t" + (this.duration - (end - start)));
-    simpleLogger.out(hlr);
+    //simpleLogger.out(hr);
+    //simpleLogger.out("Start Time: \t" + start);
+    //simpleLogger.out("End Time: \t" + end);
+    //simpleLogger.out("Duration: \t" + this.duration);
+    //simpleLogger.out("Time Offset: \t" + (this.duration - (end - start)));
+    //simpleLogger.out(hlr);
 
     //tweenMeasurements = window.performance.getEntriesByName('style_measure');
     // clear our marks and measures
