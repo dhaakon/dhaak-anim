@@ -556,10 +556,9 @@ Tween.prototype = {
         
         // Bottleneck the difference if it is too high
         this._delta = Math.min(this._delta, 25);
-        //console.log(this._delta);
 
         var offsetTime = (this.offsetTime) ? this.offsetTime : this._t + this._delta;
-
+        
         // If we are moving forward
         if (!this.isReversed){
             // If the time and the difference is less than the duration
@@ -767,6 +766,14 @@ Tween.prototype = {
 
     setDuration:function( duration ){
       this.duration = this._endTime = this._duration = duration;
+    },
+    getCurrentFrame:function(){
+      return Math.ceil((this._t / this.duration) * this._getTotalFrames());
+    },
+
+    _getTotalFrames: function(){
+      // Add 2 frames for beginning and end
+      return ((this.duration/1000)*60)+2;
     }
 }
 /**
