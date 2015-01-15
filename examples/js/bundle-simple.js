@@ -368,7 +368,8 @@ Tween.prototype = {
    *
    */
 
-   _step:function(){
+   _step:function(c){
+        if (c) this._t = c;
         // Get the current time
         this._currentTime = Date.now();
         // Get the difference between the current time and the last time
@@ -376,13 +377,13 @@ Tween.prototype = {
         
         // Bottleneck the difference if it is too high
         this._delta = Math.min(this._delta, 25);
-        //console.log(this._delta);
-        if (!this.node) console.log(this._t + this._delta, this._endTime);
 
+        var offsetTime = (this.offsetTime) ? this.offsetTime : this._t + this._delta;
+        
         // If we are moving forward
         if (!this.isReversed){
             // If the time and the difference is less than the duration
-            if (this._t + this._delta < this._endTime ){
+            if ( offsetTime < this._endTime ){
                 // Add this and the adjusted frame step to the tween value
                 this._t = this._delta + this._t;
                 // Continue to the next step
@@ -463,7 +464,13 @@ Tween.prototype = {
 
    _stop:function(){
     this.isAnimating = false;
+    this.isCompleted = true;
     window.cancelAnimationFrame(this.animationFrame);
+    
+    this._t = (this.isReversed) ? 0 : this.duration;
+    this._setProperties();
+
+
     if (this.onEnd != null && !this.isPaused) this.onEnd();
    },
 
@@ -580,6 +587,14 @@ Tween.prototype = {
 
     setDuration:function( duration ){
       this.duration = this._endTime = this._duration = duration;
+    },
+    getCurrentFrame:function(){
+      return Math.ceil((this._t / this.duration) * this._getTotalFrames());
+    },
+
+    _getTotalFrames: function(){
+      // Add 2 frames for beginning and end
+      return ((this.duration/1000)*60)+2;
     }
 }
 /**
@@ -622,7 +637,8 @@ window.requestAnimFrame = (function(){
                   window.setTimeout(callback, 1000 / 60);
           };
 })();
-module.exports = Tween 
+
+module.exports = Tween;
 
 },{"./kettle-tween-manager.js":2}],4:[function(require,module,exports){
 'use strict';

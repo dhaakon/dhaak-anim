@@ -4,123 +4,244 @@ var Tween = require('../../kettle-tween.js');
 var Easing = require('kettle-ease');
 var _ = require('underscore');
 var d3 = require('d3');
+var _str = require('sprintf').vsprintf;
+
+//var simpleLogger = require('../../node_modules/kettle-simple-logger/kettle-simple-logger.js');
+
+var stage = document.getElementById('stage');
+var playButton = document.getElementById('toggle-animation-button');
+var analysisButton = document.getElementById('toggle-analysis-button');
+var analysisElement = document.getElementById('analysis');
+
+// Define our start time
+startTime = window.performance.now();
+
+// Set our logger options
+var loggerOptions = {
+  position:'absolute',
+  left:'0px',
+  bottom:'0px',
+  height:'400px',
+  maxHeight:'400px',
+  overflowY:'scroll',
+  top:null
+};
+var tween = new Tween();
+var duration = 2000;
+
+var isCSS = (window.location.href.split('?')[1] === 'css');
+var cssWindow, windowWidth;
+
+var kettleTweenTest = function(){
+  hero.style['-webkit-transition'] = 'none';
+  hero.style['-webkit-transform'] = 'translate3d(0px, 0px, 0px)';
+
+  //cssWindow.postMessage('play', '*')
+
+  if (!tween.isAnimating){
+    hasPlayed = true;
+    tween.play(tweenOptions);
+  };
+}
+
+var tweenLiteTest = function(){
+  hero.style['left'] = '0px';
+  TweenLite.to(hero, duration/1000, {left: windowWidth + 'px' });
+};
+
+var cssTest = function(){
+  hero.style['-webkit-transition'] = 'none';
+  hero.style['left'] = '0px';
+
+  setTimeout( function(){
+    hero.style['-webkit-transition'] = '1s all ease-out';
+    hero.style['-webkit-transform'] = 'translate3d(' + windowWidth +'px, 0px, 0px)';
+  }, 10);
+}
+
+
+var play = (!isCSS) ? kettleTweenTest : tweenLiteTest;
+
+if (!isCSS) {
+  //cssWindow = window.open('http://localhost:1337/examples/devtools.html?css', 'cssWindow', "height=600,width=651");
+}else{
+  window.addEventListener('message', play);
+  playButton.style.opacity = 0;
+}
+
+// Create the simple logger
+//simpleLogger.init( loggerOptions );
+//simpleLogger.disable();
 
 (function init(){
-  console.log("Timeline example");
+  var endPosition = null;
+  var tweenMeasurements = [];
 
-
-  var circle = document.createElement("div");
-  circle.style.width = "20px";
-  circle.style.height = "20px";
-  circle.style.display = "block";
-  circle.style.background = "red";
-  circle.style.borderRadius = "10px";
-
-  var mat = new WebKitCSSMatrix();
-  var mat2 = new WebKitCSSMatrix();
+  var hero = document.getElementById("hero");
 
   var hr = new Array(70).join('=');
   var hlr = new Array(70).join('-');
 
-  document.body.appendChild(circle);
+  var start = Date.now();
+  var end = 0;
 
-  var marker = document.createElement("div");
-  var markerStyleOptions = {
-    "position" : "absolute",
-    "-webkit-transform":"translate(500px, -20px)",
-    "border":" 1px solid red",
-    "width":"20px",
-    "height":"20px",
-    "borderRadius":"10px",
-    "text-indent":"7px",
-    "font-size":"12px",
-    "line-height":"18px"
-  }
+  var tweenMeasurements;
+  var props = [];
 
-  _.extend( marker.style, markerStyleOptions );
-  
-  var marker2 = document.createElement('div');
-  marker2options = _.clone(markerStyleOptions);
+  var svg = d3.select("#analysis")
+      .append("svg")
+      .attr("class", "box")
+      .attr("width", '100%')
+      .attr("height", '100px')
+      .append("g")
 
-  _.extend( marker2options, {"-webkit-transform" : "translate(500px, 280px)"});
-  _.extend( marker2.style, marker2options );
+  stage.appendChild(hero);
 
-  marker.innerHTML = "1";
-  marker2.innerHTML = "2";
+  var _h;
+  var currentFrame = 0;
 
-  document.body.appendChild(marker);
-  document.body.appendChild(marker2);
+  var analyze = function(){
+    var idealFrames = Math.floor(tweenOptions.duration / (1000/60)) + 2;
+    var actualFrames = tweenMeasurements.length;
+    var callTotal = 0;
+    var averageCallTime = callTotal / actualFrames;
 
+    var pathFunction = d3.svg.line()
+      .x(function(d, i){return (i-1) * (window.innerWidth / idealFrames)})
+      .y(function(d){ return -(d.duration * 50) + svg.node().getBBox().height})
+      .interpolate('cardinal-open');
 
-  var tween1options = {
-    duration: 1000,
+    svg.selectAll('*').remove();
+
+    if(tweenMeasurements === undefined) throw new Error('No data present');
+
+    if( tweenMeasurements.length != 0 ){
+      tweenMeasurements.forEach(function(el, idx){
+        callTotal += el.duration;
+      });
+    }
+
+    var rect = svg.append('rect')
+       .attr('width', '100%')
+       .attr('height', '100px')
+       .attr('fill', 'rgba(0,0,0,0)')
+       .attr('stroke', 'grey')
+
+    svg.append('path')
+       .attr('d', pathFunction(tweenMeasurements))
+       .attr('stroke', 'rgba(0,0,255,0.4)')
+       .attr('stroke-width', 2)
+       .attr('style', 'pointer-events:none;')
+       .attr('fill', 'none')
+
+    _h = svg.node().getBBox().height;
+
+    line = svg.append('path')
+               .attr('stroke-width', 2)
+               .attr('stroke', 'green')
+               .attr('d', _str('M %1$u 0 L %1$u %2$u', [window.innerWidth * ((currentFrame-1)/ idealFrames), _h]))
+
+    svg.selectAll('path')
+               .data(tweenMeasurements)
+               .enter()
+               .append('path')
+               .attr('stroke-width', 0.5)
+               .attr('stroke', 'rgba(0,0,0,0.4)')
+               .attr('d', function(d, i){
+                 return _str('M %1$u 0 L %1$u %2$u', [(window.innerWidth / idealFrames) * (i-1), _h])
+               })
+
+    /*
+     svg.selectAll('circle')
+        .data(tweenMeasurements)
+        .enter()
+        .append('circle')
+        .attr('cx', function(d, i){return i * (window.innerWidth / 62)})
+        .attr('cy', function(d){return -(d.duration * 50) + _h})
+        .attr('r', function(d){return (d.duration * 16)})
+        .attr('fill', 'red').attr('style', 'opacity:0.4;')
+    */
+      
+      rect.on('mousemove', function(){
+        var x = d3.mouse(this)[0];
+        var w = svg.node().getBBox().width;
+        var currentFrame = Math.floor((x / w) * actualFrames);
+
+        pathString = _str('M %u %u L %u %u', [ x, 0, x, _h ]);
+        line.attr('d', pathString);
+
+        props[currentFrame]();
+      });
+  };
+
+  windowWidth = parseInt(window.getComputedStyle(stage).getPropertyValue('width')) - parseInt(window.getComputedStyle(hero).getPropertyValue('width'));
+
+  var onBeginHandler = function(){
+    //simpleLogger.out(hr);
+    //simpleLogger.out("Tween Started");
+
+    this._motionStack[0].c = windowWidth;
+
+    //setTimeline('start').exec();
+  };
+
+  var onEndHandler = function(){
+    //simpleLogger.out(hlr);
+    //simpleLogger.out("Tween Completed");
+
+    end = Date.now();
+
+    //simpleLogger.out(hr);
+    //simpleLogger.out("Start Time: \t" + start);
+    //simpleLogger.out("End Time: \t" + end);
+    //simpleLogger.out("Duration: \t" + this.duration);
+    //simpleLogger.out("Time Offset: \t" + (this.duration - (end - start)));
+    //simpleLogger.out(hlr);
+
+    //tweenMeasurements = window.performance.getEntriesByName('style_measure');
+    // clear our marks and measures
+    window.performance.clearMarks();
+    window.performance.clearMeasures();
+
+    //analyze();
+  };
+
+  var onUpdateHandler = function(c){
+      currentFrame = this.getCurrentFrame();
+      // mark the start of styling
+      window.performance.mark('style_update_start');
+
+      var fn = function(){
+        _prop = 'translate3d(' + ~~c + 'px, 0px, 1px) rotateZ(' + ~~c + 'deg)';
+        //_prop = 'translate3d(' + ~~c + 'px, 0px, 1px)';
+        hero.style['-webkit-transform'] = _prop;
+      };
+
+      fn();
+
+      props.push(fn);
+
+      window.performance.mark('style_update_end');
+
+      window.performance.measure('style_measure', 'style_update_start', 'style_update_end');
+      tweenMeasurements = window.performance.getEntriesByName('style_measure');
+      analyze();
+    }
+
+  tweenOptions = {
+    duration: duration,
     curve:[0, 500],
-    easing:Easing.easeInOutBack,
-    onBegin:function(){
-      console.log(hr);
-      console.log("Tween 1 Starting");
-      console.log(hlr);
-    },
-    onUpdate:function(c){
-      mat = mat.translate(c, 0, 0);
-      circle.style['-webkit-transform'] = new WebKitCSSMatrix().translate(c,0,0).toString();
-    },
-    onEnd:function(){
-      console.log(hr);
-      console.log("Tween 1 Completed");
-      console.log(hlr);
-    }
+    easing: Easing.easeOutQuad,
+    onBegin: onBeginHandler,
+    onEnd: onEndHandler,
+    onUpdate: onUpdateHandler
   }
+  var hasPlayed = false;
 
-  var tween2options = {
-    duration: 1000,
-    curve:[1, 3],
-    easing:Easing.easeOutBounce,
-    onUpdate:function(c){
-      //circle.style['-webkit-transform'] = new WebKitCSSMatrix(circle.style['-webkit-transform']).scale(c).toString();
-    },
-    onEnd:function(){
-      console.log(hr);
-      console.log("Tween 2 Completed");
-      console.log(hlr);
-    }
-  }
+  playButton.onclick = play;
+}())
 
-  var tween3options = {
-    duration: 1000,
-    curve:new Tween.Line([1,0],[0.3333339, 300]),
-    easing:Easing.easeOutBounce,
-    onUpdate:function(c){
-      mat = new WebKitCSSMatrix(circle.style['-webkit-transform']);
-      mat2 = mat.translate(0, c[1]);
-      circle.style['-webkit-transform'] = new WebKitCSSMatrix().translate(500,c[1],0).toString();
-    },
-    onEnd:function(){
-      console.log(hr);
-      console.log("Tween 3 Completed");
-      console.log(hlr);
-
-    }
-  }
-
-  var tween1 = new Tween( tween1options );
-  var tween2 = new Tween( tween2options );
-  var tween3 = new Tween( tween3options );
-
-  var options = {
-    duration: 1000
-  }
-
-  var timeline = new Timeline( options );
-  timeline.addTweens([tween1, tween2, tween3]);
-
-  setTimeout(function(){
-    timeline.start();
-  }, 200);
-
-})()
-
-},{"../../kettle-timeline.js":2,"../../kettle-tween.js":4,"d3":5,"kettle-ease":6,"underscore":7}],2:[function(require,module,exports){
+},{"../../kettle-timeline.js":2,"../../kettle-tween.js":4,"d3":5,"kettle-ease":6,"sprintf":7,"underscore":8}],2:[function(require,module,exports){
 var _ = require("underscore");
 var Tween = require('./kettle-tween.js');
 
@@ -301,7 +422,7 @@ _.extend(Timeline.prototype, __prototype);
 
 module.exports = Timeline;
 
-},{"./kettle-tween-manager.js":3,"./kettle-tween.js":4,"underscore":7}],3:[function(require,module,exports){
+},{"./kettle-tween-manager.js":3,"./kettle-tween.js":4,"underscore":8}],3:[function(require,module,exports){
 var TweenManager = {
   // PROPERTIES
   _tweens:[],
@@ -10434,6 +10555,257 @@ module.exports = {
 };
 
 },{}],7:[function(require,module,exports){
+/**
+sprintf() for JavaScript 0.7-beta1
+http://www.diveintojavascript.com/projects/javascript-sprintf
+
+Copyright (c) Alexandru Marasteanu <alexaholic [at) gmail (dot] com>
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of sprintf() for JavaScript nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Alexandru Marasteanu BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+Changelog:
+2010.11.07 - 0.7-beta1-node
+  - converted it to a node.js compatible module
+
+2010.09.06 - 0.7-beta1
+  - features: vsprintf, support for named placeholders
+  - enhancements: format cache, reduced global namespace pollution
+
+2010.05.22 - 0.6:
+ - reverted to 0.4 and fixed the bug regarding the sign of the number 0
+ Note:
+ Thanks to Raphael Pigulla <raph (at] n3rd [dot) org> (http://www.n3rd.org/)
+ who warned me about a bug in 0.5, I discovered that the last update was
+ a regress. I appologize for that.
+
+2010.05.09 - 0.5:
+ - bug fix: 0 is now preceeded with a + sign
+ - bug fix: the sign was not at the right position on padded results (Kamal Abdali)
+ - switched from GPL to BSD license
+
+2007.10.21 - 0.4:
+ - unit test and patch (David Baird)
+
+2007.09.17 - 0.3:
+ - bug fix: no longer throws exception on empty paramenters (Hans Pufal)
+
+2007.09.11 - 0.2:
+ - feature: added argument swapping
+
+2007.04.03 - 0.1:
+ - initial release
+**/
+
+var sprintf = (function() {
+	function get_type(variable) {
+		return Object.prototype.toString.call(variable).slice(8, -1).toLowerCase();
+	}
+	function str_repeat(input, multiplier) {
+		for (var output = []; multiplier > 0; output[--multiplier] = input) {/* do nothing */}
+		return output.join('');
+	}
+
+	var str_format = function() {
+		if (!str_format.cache.hasOwnProperty(arguments[0])) {
+			str_format.cache[arguments[0]] = str_format.parse(arguments[0]);
+		}
+		return str_format.format.call(null, str_format.cache[arguments[0]], arguments);
+	};
+
+	// convert object to simple one line string without indentation or
+	// newlines. Note that this implementation does not print array
+	// values to their actual place for sparse arrays. 
+	//
+	// For example sparse array like this
+	//    l = []
+	//    l[4] = 1
+	// Would be printed as "[1]" instead of "[, , , , 1]"
+	// 
+	// If argument 'seen' is not null and array the function will check for 
+	// circular object references from argument.
+	str_format.object_stringify = function(obj, depth, maxdepth, seen) {
+		var str = '';
+		if (obj != null) {
+			switch( typeof(obj) ) {
+			case 'function': 
+				return '[Function' + (obj.name ? ': '+obj.name : '') + ']';
+			    break;
+			case 'object':
+				if ( obj instanceof Error) { return '[' + obj.toString() + ']' };
+				if (depth >= maxdepth) return '[Object]'
+				if (seen) {
+					// add object to seen list
+					seen = seen.slice(0)
+					seen.push(obj);
+				}
+				if (obj.length != null) { //array
+					str += '[';
+					var arr = []
+					for (var i in obj) {
+						if (seen && seen.indexOf(obj[i]) >= 0) arr.push('[Circular]');
+						else arr.push(str_format.object_stringify(obj[i], depth+1, maxdepth, seen));
+					}
+					str += arr.join(', ') + ']';
+				} else if ('getMonth' in obj) { // date
+					return 'Date(' + obj + ')';
+				} else { // object
+					str += '{';
+					var arr = []
+					for (var k in obj) { 
+						if(obj.hasOwnProperty(k)) {
+							if (seen && seen.indexOf(obj[k]) >= 0) arr.push(k + ': [Circular]');
+							else arr.push(k +': ' +str_format.object_stringify(obj[k], depth+1, maxdepth, seen)); 
+						}
+					}
+					str += arr.join(', ') + '}';
+				}
+				return str;
+				break;
+			case 'string':				
+				return '"' + obj + '"';
+				break
+			}
+		}
+		return '' + obj;
+	}
+
+	str_format.format = function(parse_tree, argv) {
+		var cursor = 1, tree_length = parse_tree.length, node_type = '', arg, output = [], i, k, match, pad, pad_character, pad_length;
+		for (i = 0; i < tree_length; i++) {
+			node_type = get_type(parse_tree[i]);
+			if (node_type === 'string') {
+				output.push(parse_tree[i]);
+			}
+			else if (node_type === 'array') {
+				match = parse_tree[i]; // convenience purposes only
+				if (match[2]) { // keyword argument
+					arg = argv[cursor];
+					for (k = 0; k < match[2].length; k++) {
+						if (!arg.hasOwnProperty(match[2][k])) {
+							throw new Error(sprintf('[sprintf] property "%s" does not exist', match[2][k]));
+						}
+						arg = arg[match[2][k]];
+					}
+				}
+				else if (match[1]) { // positional argument (explicit)
+					arg = argv[match[1]];
+				}
+				else { // positional argument (implicit)
+					arg = argv[cursor++];
+				}
+
+				if (/[^sO]/.test(match[8]) && (get_type(arg) != 'number')) {
+					throw new Error(sprintf('[sprintf] expecting number but found %s "' + arg + '"', get_type(arg)));
+				}
+				switch (match[8]) {
+					case 'b': arg = arg.toString(2); break;
+					case 'c': arg = String.fromCharCode(arg); break;
+					case 'd': arg = parseInt(arg, 10); break;
+					case 'e': arg = match[7] ? arg.toExponential(match[7]) : arg.toExponential(); break;
+					case 'f': arg = match[7] ? parseFloat(arg).toFixed(match[7]) : parseFloat(arg); break;
+				    case 'O': arg = str_format.object_stringify(arg, 0, parseInt(match[7]) || 5); break;
+					case 'o': arg = arg.toString(8); break;
+					case 's': arg = ((arg = String(arg)) && match[7] ? arg.substring(0, match[7]) : arg); break;
+					case 'u': arg = Math.abs(arg); break;
+					case 'x': arg = arg.toString(16); break;
+					case 'X': arg = arg.toString(16).toUpperCase(); break;
+				}
+				arg = (/[def]/.test(match[8]) && match[3] && arg >= 0 ? '+'+ arg : arg);
+				pad_character = match[4] ? match[4] == '0' ? '0' : match[4].charAt(1) : ' ';
+				pad_length = match[6] - String(arg).length;
+				pad = match[6] ? str_repeat(pad_character, pad_length) : '';
+				output.push(match[5] ? arg + pad : pad + arg);
+			}
+		}
+		return output.join('');
+	};
+
+	str_format.cache = {};
+
+	str_format.parse = function(fmt) {
+		var _fmt = fmt, match = [], parse_tree = [], arg_names = 0;
+		while (_fmt) {
+			if ((match = /^[^\x25]+/.exec(_fmt)) !== null) {
+				parse_tree.push(match[0]);
+			}
+			else if ((match = /^\x25{2}/.exec(_fmt)) !== null) {
+				parse_tree.push('%');
+			}
+			else if ((match = /^\x25(?:([1-9]\d*)\$|\(([^\)]+)\))?(\+)?(0|'[^$])?(-)?(\d+)?(?:\.(\d+))?([b-fosOuxX])/.exec(_fmt)) !== null) {
+				if (match[2]) {
+					arg_names |= 1;
+					var field_list = [], replacement_field = match[2], field_match = [];
+					if ((field_match = /^([a-z_][a-z_\d]*)/i.exec(replacement_field)) !== null) {
+						field_list.push(field_match[1]);
+						while ((replacement_field = replacement_field.substring(field_match[0].length)) !== '') {
+							if ((field_match = /^\.([a-z_][a-z_\d]*)/i.exec(replacement_field)) !== null) {
+								field_list.push(field_match[1]);
+							}
+							else if ((field_match = /^\[(\d+)\]/.exec(replacement_field)) !== null) {
+								field_list.push(field_match[1]);
+							}
+							else {
+								throw new Error('[sprintf] ' + replacement_field);
+							}
+						}
+					}
+					else {
+                        throw new Error('[sprintf] ' + replacement_field);
+					}
+					match[2] = field_list;
+				}
+				else {
+					arg_names |= 2;
+				}
+				if (arg_names === 3) {
+					throw new Error('[sprintf] mixing positional and named placeholders is not (yet) supported');
+				}
+				parse_tree.push(match);
+			}
+			else {
+				throw new Error('[sprintf] ' + _fmt);
+			}
+			_fmt = _fmt.substring(match[0].length);
+		}
+		return parse_tree;
+	};
+
+	return str_format;
+})();
+
+var vsprintf = function(fmt, argv) {
+	var argvClone = argv.slice();
+	argvClone.unshift(fmt);
+	return sprintf.apply(null, argvClone);
+};
+
+module.exports = sprintf;
+sprintf.sprintf = sprintf;
+sprintf.vsprintf = vsprintf;
+
+},{}],8:[function(require,module,exports){
 //     Underscore.js 1.7.0
 //     http://underscorejs.org
 //     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors

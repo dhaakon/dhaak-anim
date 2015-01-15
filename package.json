@@ -32,5 +32,10 @@
     "kettle-ease": "^0.1.0",
     "stats-js": "^1.0.0-alpha1",
     "underscore": "^1.7.0"
+  },
+  "dependencies": {
+    "d3": "^3.5.3",
+    "kettle-simple-logger": "^0.1.0",
+    "sprintf": "^0.1.5"
   }
 }

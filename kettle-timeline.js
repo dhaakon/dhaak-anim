@@ -59,7 +59,7 @@ var __prototype = {
       //easing:require('kettle-ease').easerOutBack,
       onUpdate:this.onUpdate.bind(this),
       onBegin:this.onBegin,
-      onEnd:this.onEnd,
+      onEnd:this.onEnd.bind(this),
       curve:[0,1]
     }
 
@@ -80,23 +80,25 @@ var __prototype = {
     for( i = 0; i < len; ++i ){
       var _t =  this._tweens[i];
       if(time > _t.start && time < _t.end){
-        console.log("time = " + time, _t.end);
         if (!_t.isPaused){ 
+          //console.log(_t.start, _t.end);
           //this._tween._t = _t.end;
-          //console.log(this._tween._t);
           
           if (this._tweens.indexOf(_t) !== this._currentTweenIdx){
-            this._previousTweenIdx = this.currentTweenIdx || 0;
+            this._previousTweenIdx = this._currentTweenIdx || 0;
 
             var _prevTween = this._tweens[this._previousTweenIdx];
             var _tmp = _prevTween.tween;
 
-            //if(!_tmp.isPaused) _tmp._update(_prevTween.end);
+            if(!_tmp.isAnimating && !_tmp.isCompleted) {
+              console.log('stopping');
+              _tmp._stop();
+            }
           }
           
           this._currentTweenIdx = this._tweens.indexOf(_t);
           
-          return _t;
+          return this._tweens[this._currentTweenIdx];
         }
       }
     }
@@ -142,23 +144,32 @@ var __prototype = {
   },
 
   addTweenAt:function(tween, idx){},
-
   removeTween:function( tween ){},
 
   // EVENTS
   onBegin:function(){},
   onEnd:function(){
-    //this.reverse();
-    //this.play();
-  },
+    //this._tweens[this._tweens.length - 1]._stop();
+
+    setTimeout(function(){
+      this._tween.reverse();
+      this._tween.play();
+    }.bind(this),
+    500);
+   },
 
   onUpdate:function(c){
     this._currentTime = c * this.duration;
+    console.log(this._currentTime);
     var _tweenReference = this._getTweenAtTime(~~this._currentTime);
+    //console.log(this._tween._t);
 
     if(_tweenReference){
       var _tween = _tweenReference.tween;
-      _tween._update(this._tween._t - _tween.start);
+      var _inputTime = this._tween._t - _tweenReference.start;
+      _tween.inputTime = _inputTime;
+      //console.log(this._tween._t - _tweenReference.start);
+      _tween._step(_inputTime);
     }
   },
 };

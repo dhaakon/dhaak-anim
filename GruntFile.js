@@ -23,6 +23,7 @@ module.exports = function(grunt){
         files:{
           "./examples/js/bundle-simple.js" : ['./examples/src/simple-tween.js'],
           "./examples/js/bundle-timeline.js" : ['./examples/src/timeline.js'],
+          "./examples/js/bundle-devtools.js" : ['./examples/src/devtools.js'],
         },
       },
       build:{
