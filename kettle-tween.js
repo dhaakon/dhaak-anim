@@ -68,7 +68,7 @@
  *    @property {boolean} isPaused (read-only) Boolean determining if the Tween is in the paused state.
  *    @property {number} percentage (read-only) The percentage of the Tween's completion.
  *    @property {object} properties The properties object which is used to create the motion objects.
- *    @property {array} curve The curves object which is used to create the motion objects.
+ *    @property {array} _curve The curves object which is used to create the motion objects.
  *    @property {function} easing The easing function to be used for the tween.
  *    @property {object} node An object which the Tween will animate.
  *    @property {number} duration The duration of the tween (in milliseconds).
@@ -91,7 +91,7 @@ var Tween = function( options ){
   this.isReversed = false; 
   this.isPaused = false; 
   this.properties = null;  
-  this.curve = [0, 1];
+  this._curve = [0, 1];
   this.overshoot = 0;
   this._manager = require('./kettle-tween-manager.js');
   this.easing = function(t, b, c, d){
@@ -107,6 +107,8 @@ var Tween = function( options ){
   this.options = options;
 
   if (options) this._setOptions(options);
+
+  return this;
 }
 
 Tween.prototype = {
@@ -138,9 +140,11 @@ Tween.prototype = {
     *
    */
    _setMotionFromCurve:function(){
-    var c = this.curve;
+    var c = this._curve;
 
+    console.log(this._curve);
     if (c instanceof Tween.Line !== true){
+      //console.log('not a line');
       var _mo = new MotionObject();
       _mo.d = this.duration;
       _mo.b = c[0];
@@ -435,9 +439,32 @@ Tween.prototype = {
       this._start();
     },
 
-    setCurve:function(curve){
-      this.curve = curve;
+    // functional methods
+    update: function( cb ){
+      this.onUpdate = cb;
+      return this;
+    },
+
+    begin:function( fn ){
+      this.onBegin = fn;
+      return this;
+    },
+
+    end:function( fn ){
+      this.onEnd = fn;
+      return this;
+    },
+
+    ease: function(ease){
+      this.ease = ease;
+      return this;
+    },
+
+    curve:function(curve){
+      this._curve = curve;
+      this._motionStack = [];
       this._setMotionFromCurve(curve);
+      return this;
     },
 
     setDuration:function( duration ){

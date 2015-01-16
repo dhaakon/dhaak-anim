@@ -1,3 +1,31 @@
+var Tween = require('../../kettle-tween.js');
+var Easing = require('kettle-ease');
+
+(function init(){
+  var obj = {x:0};
+
+  var opts = {
+    node:obj,
+    duration:500
+  };
+
+  var _update = function(c){
+    this.node.x = c;
+    //console.log(this.node.x);
+    console.log(c);
+  }
+
+  var _begin = function(){
+    console.log('tween started');
+  }
+
+  var t = new Tween(opts)
+              .update(_update).begin(_begin)
+              .ease(Easing.easeInCirc)
+              .curve([0,100])
+              .play();
+})();
+/*
 (function init(){
 //var Tween = require("kettle-tween");
   var Stats = require("stats-js");
@@ -11,6 +39,17 @@
   var numBoxes = 3;
   var count = 0;
   var easeFunc = "Back";
+
+  
+  
+   //var tween = new Tween({node:target})
+                   //.duration(1000)
+                   //.update(onUpdate)
+                   //.ease(Easing.easeInCirc)
+                   //.play();
+  
+  
+
 
   var _easing = [
     //easeInElastic:Easing.easeInElastic,
@@ -120,3 +159,4 @@
 
 
 })();
+*/
