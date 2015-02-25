@@ -19,11 +19,17 @@ var Easing = require('kettle-ease');
     console.log('tween started');
   }
 
+  var _end = function(){
+    console.log('this is the end');
+  }
+
   var t = new Tween(opts)
-              .update(_update).begin(_begin)
+              .begin(_begin)
+              .update(_update)
               .ease(Easing.easeInCirc)
               .curve([0,100])
-              .play();
+              .play()
+              .end(_end);
 })();
 /*
 (function init(){

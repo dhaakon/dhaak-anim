@@ -99,7 +99,7 @@ if (!isCSS) {
   var _h;
   var currentFrame = 0;
 
-  var analyze = function(){
+  var analyze = function( tween ){
     var idealFrames = Math.floor(tweenOptions.duration / (1000/60)) + 2;
     var actualFrames = tweenMeasurements.length;
     var callTotal = 0;

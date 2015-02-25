@@ -7,111 +7,78 @@ var d3 = require('d3');
 (function init(){
   console.log("Timeline example");
 
+  var createCircle = function(){
+    var _circle = document.createElement("div");
+    _circle.style.width = "20px";
+    _circle.style.left = "400px";
+    _circle.style.top = "200px";
+    _circle.style.height = "20px";
+    _circle.style.display = "block";
+    _circle.style.background = "red";
+    _circle.style.borderRadius = "10px";
+    _circle.style.position = "absolute";
+    _circle.style['-webkit-transform'] = "scale(0)";
 
-  var circle = document.createElement("div");
-  circle.style.width = "20px";
-  circle.style.height = "20px";
-  circle.style.display = "block";
-  circle.style.background = "red";
-  circle.style.borderRadius = "10px";
+    return _circle;
+  }
 
-  var mat = new WebKitCSSMatrix();
-  var mat2 = new WebKitCSSMatrix();
-
-  var hr = new Array(70).join('=');
-  var hlr = new Array(70).join('-');
+  var circle = createCircle();
 
   document.body.appendChild(circle);
 
-  var marker = document.createElement("div");
-  var markerStyleOptions = {
-    "position" : "absolute",
-    "-webkit-transform":"translate(500px, -20px)",
-    "border":" 1px solid red",
-    "width":"20px",
-    "height":"20px",
-    "borderRadius":"10px",
-    "text-indent":"7px",
-    "font-size":"12px",
-    "line-height":"18px"
-  }
-
-  _.extend( marker.style, markerStyleOptions );
-  
-  var marker2 = document.createElement('div');
-  marker2options = _.clone(markerStyleOptions);
-
-  _.extend( marker2options, {"-webkit-transform" : "translate(500px, 280px)"});
-  _.extend( marker2.style, marker2options );
-
-  marker.innerHTML = "1";
-  marker2.innerHTML = "2";
-
-  document.body.appendChild(marker);
-  document.body.appendChild(marker2);
-
-
   var tween1options = {
     duration: 1000,
-    curve:[0, 500],
-    easing:Easing.easeInOutBack,
+    delay:300,
+    curve:new Tween.Line( [   0,    0,  50,    0,  300 ],
+                          [ 360,  360,  50,  1.5,  300 ]),
+    easing:Easing.easeInOutQuad,
     onBegin:function(){
-      console.log(hr);
-      console.log("Tween 1 Starting");
-      console.log(hlr);
+      console.log('1 start');
     },
     onUpdate:function(c){
-      mat = mat.translate(c, 0, 0);
-      circle.style['-webkit-transform'] = new WebKitCSSMatrix().translate(c,0,0).toString();
+      var _r = c[2] * c[3];
+      var _x = Math.cos(c[0] * ((Math.PI * 2) / 180)) * _r;
+      var _y = Math.sin(c[1] * ((Math.PI * 2) / 180)) * _r;
+      var _offset = c[4];
+
+      var rx = 0, ry = 0, rz = 0;
+
+      mat = new WebKitCSSMatrix('scale(' + c[3] + ')').rotate( rx, ry, rz ).translate( _x, _y,0).toString();
+
+      circle.style['-webkit-transform'] = mat
     },
     onEnd:function(){
-      console.log(hr);
-      console.log("Tween 1 Completed");
-      console.log(hlr);
+      console.log('1 end');
     }
   }
 
   var tween2options = {
-    duration: 1000,
-    curve:[1, 3],
-    easing:Easing.easeOutBounce,
+    duration: 400,
+    delay:2000,
+    curve:new Tween.Line([1,100],[ 10, 255 ]),
+    easing:Easing.easeInQuad,
     onUpdate:function(c){
-      //circle.style['-webkit-transform'] = new WebKitCSSMatrix(circle.style['-webkit-transform']).scale(c).toString();
+      var b = Math.round(c[1]);
+      circle.style['-webkit-transform'] = new WebKitCSSMatrix(circle.style['-webkit-transform']).rotate(180,0,1).toString();
+      circle.style.background = 'rgb(' + b + ',0,' + b + ')';
+      circle.style.border = c[0] + 'px red';
     },
     onEnd:function(){
-      console.log(hr);
-      console.log("Tween 2 Completed");
-      console.log(hlr);
-    }
-  }
-
-  var tween3options = {
-    duration: 1000,
-    curve:new Tween.Line([1,0],[0.3333339, 300]),
-    easing:Easing.easeOutBounce,
-    onUpdate:function(c){
-      mat = new WebKitCSSMatrix(circle.style['-webkit-transform']);
-      mat2 = mat.translate(0, c[1]);
-      circle.style['-webkit-transform'] = new WebKitCSSMatrix().translate(500,c[1],0).toString();
-    },
-    onEnd:function(){
-      console.log(hr);
-      console.log("Tween 3 Completed");
-      console.log(hlr);
-
     }
   }
 
   var tween1 = new Tween( tween1options );
   var tween2 = new Tween( tween2options );
-  var tween3 = new Tween( tween3options );
 
   var options = {
     duration: 1000
   }
 
+  var tween1clone = tween1.clone();
+  tween1clone.reverse();
+
   var timeline = new Timeline( options );
-  timeline.addTweens([tween1, tween2, tween3]);
+  timeline.addTweens([ tween1, tween2 ]);
 
   setTimeout(function(){
     timeline.start();

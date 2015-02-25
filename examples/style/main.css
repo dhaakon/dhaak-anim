@@ -2,7 +2,10 @@
   -webkit-margin-before:0;
   -webkit-margin-after:0;
 }
-
+#content{
+  width:100%;
+  height:200px;
+}
 body{
   padding:0;
   margin:0;
@@ -10,7 +13,7 @@ body{
 }
 
 #stage{
-  position:absolute;
+  position:relative;
   width: 100%;
   height: 100px;
   /*position:absolute;*/
@@ -28,7 +31,7 @@ body{
   height : 100px;
   display : block;
   background : red;
-  position : absolute;
+  position : relative;
   left:0px;
 }
 
@@ -41,7 +44,7 @@ button{
 }
 
 #ui{
-  position:absolute;
+  position:relative;
   top:60px;
   left:10px;
   width:188px;

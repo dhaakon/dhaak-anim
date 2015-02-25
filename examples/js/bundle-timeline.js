@@ -8,111 +8,78 @@ var d3 = require('d3');
 (function init(){
   console.log("Timeline example");
 
+  var createCircle = function(){
+    var _circle = document.createElement("div");
+    _circle.style.width = "20px";
+    _circle.style.left = "400px";
+    _circle.style.top = "200px";
+    _circle.style.height = "20px";
+    _circle.style.display = "block";
+    _circle.style.background = "red";
+    _circle.style.borderRadius = "10px";
+    _circle.style.position = "absolute";
+    _circle.style['-webkit-transform'] = "scale(0)";
 
-  var circle = document.createElement("div");
-  circle.style.width = "20px";
-  circle.style.height = "20px";
-  circle.style.display = "block";
-  circle.style.background = "red";
-  circle.style.borderRadius = "10px";
+    return _circle;
+  }
 
-  var mat = new WebKitCSSMatrix();
-  var mat2 = new WebKitCSSMatrix();
-
-  var hr = new Array(70).join('=');
-  var hlr = new Array(70).join('-');
+  var circle = createCircle();
 
   document.body.appendChild(circle);
 
-  var marker = document.createElement("div");
-  var markerStyleOptions = {
-    "position" : "absolute",
-    "-webkit-transform":"translate(500px, -20px)",
-    "border":" 1px solid red",
-    "width":"20px",
-    "height":"20px",
-    "borderRadius":"10px",
-    "text-indent":"7px",
-    "font-size":"12px",
-    "line-height":"18px"
-  }
-
-  _.extend( marker.style, markerStyleOptions );
-  
-  var marker2 = document.createElement('div');
-  marker2options = _.clone(markerStyleOptions);
-
-  _.extend( marker2options, {"-webkit-transform" : "translate(500px, 280px)"});
-  _.extend( marker2.style, marker2options );
-
-  marker.innerHTML = "1";
-  marker2.innerHTML = "2";
-
-  document.body.appendChild(marker);
-  document.body.appendChild(marker2);
-
-
   var tween1options = {
     duration: 1000,
-    curve:[0, 500],
-    easing:Easing.easeInOutBack,
+    delay:300,
+    curve:new Tween.Line( [   0,    0,  50,    0,  300 ],
+                          [ 360,  360,  50,  1.5,  300 ]),
+    easing:Easing.easeInOutQuad,
     onBegin:function(){
-      console.log(hr);
-      console.log("Tween 1 Starting");
-      console.log(hlr);
+      console.log('1 start');
     },
     onUpdate:function(c){
-      mat = mat.translate(c, 0, 0);
-      circle.style['-webkit-transform'] = new WebKitCSSMatrix().translate(c,0,0).toString();
+      var _r = c[2] * c[3];
+      var _x = Math.cos(c[0] * ((Math.PI * 2) / 180)) * _r;
+      var _y = Math.sin(c[1] * ((Math.PI * 2) / 180)) * _r;
+      var _offset = c[4];
+
+      var rx = 0, ry = 0, rz = 0;
+
+      mat = new WebKitCSSMatrix('scale(' + c[3] + ')').rotate( rx, ry, rz ).translate( _x, _y,0).toString();
+
+      circle.style['-webkit-transform'] = mat
     },
     onEnd:function(){
-      console.log(hr);
-      console.log("Tween 1 Completed");
-      console.log(hlr);
+      console.log('1 end');
     }
   }
 
   var tween2options = {
-    duration: 1000,
-    curve:[1, 3],
-    easing:Easing.easeOutBounce,
+    duration: 400,
+    delay:2000,
+    curve:new Tween.Line([1,100],[ 10, 255 ]),
+    easing:Easing.easeInQuad,
     onUpdate:function(c){
-      //circle.style['-webkit-transform'] = new WebKitCSSMatrix(circle.style['-webkit-transform']).scale(c).toString();
+      var b = Math.round(c[1]);
+      circle.style['-webkit-transform'] = new WebKitCSSMatrix(circle.style['-webkit-transform']).rotate(180,0,1).toString();
+      circle.style.background = 'rgb(' + b + ',0,' + b + ')';
+      circle.style.border = c[0] + 'px red';
     },
     onEnd:function(){
-      console.log(hr);
-      console.log("Tween 2 Completed");
-      console.log(hlr);
-    }
-  }
-
-  var tween3options = {
-    duration: 1000,
-    curve:new Tween.Line([1,0],[0.3333339, 300]),
-    easing:Easing.easeOutBounce,
-    onUpdate:function(c){
-      mat = new WebKitCSSMatrix(circle.style['-webkit-transform']);
-      mat2 = mat.translate(0, c[1]);
-      circle.style['-webkit-transform'] = new WebKitCSSMatrix().translate(500,c[1],0).toString();
-    },
-    onEnd:function(){
-      console.log(hr);
-      console.log("Tween 3 Completed");
-      console.log(hlr);
-
     }
   }
 
   var tween1 = new Tween( tween1options );
   var tween2 = new Tween( tween2options );
-  var tween3 = new Tween( tween3options );
 
   var options = {
     duration: 1000
   }
 
+  var tween1clone = tween1.clone();
+  tween1clone.reverse();
+
   var timeline = new Timeline( options );
-  timeline.addTweens([tween1, tween2, tween3]);
+  timeline.addTweens([ tween1, tween2 ]);
 
   setTimeout(function(){
     timeline.start();
@@ -130,178 +97,157 @@ var Timeline = function( options ){
   this.init( options );
 };
 
-var __prototype = {
-  // PROPERTIES
-  _tweens:[],
-  _tail:null,
-  _head:null,
-  _currentTween:null,
-  _previousTween:null,
-  _nextTween:null,
+var proto = Timeline.prototype;
 
-  _currentTweenIdx: 0,
-  _numTweens:0,
+proto.init = function( options ){
+  this._tweens = [];
 
-  // The main tween object which advances the timeline
-  _tween:null,
+  this._tail = null;
+  this._head = null;
 
-  _delta:0,
-  _previousTime:0,
-  _startTime:0,
+  this._currentTween = null;
+  this._previousTween = null;
+  this._nextTween = null;
 
-  _duration:0, duration:0,
-  _percentComplete:0,
-  _manager: TweenManager,
+  this._currentTweenIdx = 0;
+  this._numTweens = 0;
 
-  loop:false,
+  this._tween = null;
+  this._delta = 0;
+  this._previousTime = 0;
+  this._startTime = 0;
 
-  // METHODS
-  init:function( options ){
-    if (options) this._setupWithOptions( options );
-    this._setupMainTween();
+  this._duration = 0;
+  this._percentComplete = 0;
+  this._manager = TweenManager;
 
-  },
+  this._loop = false;
 
-  _addTween:function(tween){
-    var _prevTweenEnd = (this._numTweens > 0) ? this._tweens[this._numTweens-1].end : 0;
-
-    var tweenReference = {
-      start: _prevTweenEnd,
-      end: _prevTweenEnd + tween.duration,
-      tween: tween
-    }
-
-    this._tweens.push(tweenReference);
-    this._setDuration();
-    this._numTweens++;
-  },
-
-  _setupMainTween:function(){
-    var options = {
-      node:this,
-      //easing:require('kettle-ease').easerOutBack,
-      onUpdate:this.onUpdate.bind(this),
-      onBegin:this.onBegin,
-      onEnd:this.onEnd.bind(this),
-      curve:[0,1]
-    }
-
-    this._tween = new Tween(options);
-  },
-
-  _setupWithOptions:function( options ){
-    for(var key in options){
-      this[key] = options[key];
-    }
-  },
-
-  _getTweenAtTime:function(time){
-    var i; len = this._tweens.length;
-
-    time = ~~time + this._tween._delta;
-
-    for( i = 0; i < len; ++i ){
-      var _t =  this._tweens[i];
-      if(time > _t.start && time < _t.end){
-        if (!_t.isPaused){ 
-          //console.log(_t.start, _t.end);
-          //this._tween._t = _t.end;
-          
-          if (this._tweens.indexOf(_t) !== this._currentTweenIdx){
-            this._previousTweenIdx = this._currentTweenIdx || 0;
-
-            var _prevTween = this._tweens[this._previousTweenIdx];
-            var _tmp = _prevTween.tween;
-
-            if(!_tmp.isAnimating && !_tmp.isCompleted) {
-              console.log('stopping');
-              _tmp._stop();
-            }
-          }
-          
-          this._currentTweenIdx = this._tweens.indexOf(_t);
-          
-          return this._tweens[this._currentTweenIdx];
-        }
-      }
-    }
-  },
-
-  _setDuration:function(){
-    var i, tmpDuration = 0, len = this._tweens.length;
-
-    for(i = 0; i < len; ++i){
-      tmpDuration += this._tweens[i].tween.duration;
-    }
-
-    this.duration = this._duration = tmpDuration;
-
-    this._tween.setDuration(this.duration);
-  },
-
-  start:function(){
-    //if ( !this._currentTween) this._currentTween = this._tweens[0];
-    //this._currentTween.play();
-    this._tween.play();
-  },
-
-  addTween:function( tween ){
-    this._duration += tween.duration;
-    var _prevTweenEnd = (this._numTweens > 0) ? this._tweens[this._numTweens-1].end : 0;
-
-    var tweenReference = {
-      start: _prevTweenEnd,
-      end: _prevTweenEnd + tween.duration
-    }
-
-    this._tweens.push(tween);
-    this._numTweens++;
-  },
-
-  addTweens:function( tweens ){
-    var i; len = tweens.length;
-
-    for(i = 0; i < len; ++i){
-      this._addTween(tweens[i])
-    }
-  },
-
-  addTweenAt:function(tween, idx){},
-  removeTween:function( tween ){},
-
-  // EVENTS
-  onBegin:function(){},
-  onEnd:function(){
-    //this._tweens[this._tweens.length - 1]._stop();
-
-    setTimeout(function(){
-      this._tween.reverse();
-      this._tween.play();
-    }.bind(this),
-    500);
-   },
-
-  onUpdate:function(c){
-    this._currentTime = c * this.duration;
-    console.log(this._currentTime);
-    var _tweenReference = this._getTweenAtTime(~~this._currentTime);
-    //console.log(this._tween._t);
-
-    if(_tweenReference){
-      var _tween = _tweenReference.tween;
-      var _inputTime = this._tween._t - _tweenReference.start;
-      _tween.inputTime = _inputTime;
-      //console.log(this._tween._t - _tweenReference.start);
-      _tween._step(_inputTime);
-    }
-  },
+  if (options) this._setupWithOptions( options );
+  this._setupMainTween();
 };
 
-_.extend(Timeline.prototype, __prototype);
+proto._addTween = function( tween ){
+  var _prevTweenEnd = (this._numTweens > 0) ? this._tweens[this._numTweens-1].end : 0;
+
+  var tweenReference = {
+    start: _prevTweenEnd + tween.delay,
+    end: _prevTweenEnd + tween.duration + tween.delay,
+    tween: tween
+  }
+
+
+  this._tweens.push(tweenReference);
+  this._setDuration();
+  this._numTweens++;
+};
+
+proto._setupMainTween = function(){
+  var options = {
+    node:this,
+    easing:require('kettle-ease').linear,
+    onUpdate:this.onUpdate.bind(this),
+    onBegin:this.onBegin,
+    onEnd:this.onEnd.bind(this),
+    curve:[0,1]
+  }
+
+  this._tween = new Tween(options);
+};
+
+proto._setupWithOptions = function( options ){
+  for(var key in options){
+    this[key] = options[key];
+  }
+};
+
+proto._getTweenAtTime = function(time){
+  var i; len = this._tweens.length;
+
+
+  for( i = 0; i < len; ++i ){
+    var _t =  this._tweens[i];
+    if(time > _t.start && time < _t.end){
+      if (!_t.isPaused){
+        //this._tween._t = _t.end;
+
+        if (this._tweens.indexOf(_t) !== this._currentTweenIdx){
+          this._previousTweenIdx = this._currentTweenIdx || 0;
+
+          var _prevTween = this._tweens[this._previousTweenIdx];
+          var _tmp = _prevTween.tween;
+        }
+
+        this._currentTweenIdx = this._tweens.indexOf(_t);
+
+        return this._tweens[this._currentTweenIdx];
+      }
+    }
+  }
+};
+
+proto._setDuration = function(){
+  var i, tmpDuration = 0, len = this._tweens.length;
+
+  for(i = 0; i < len; ++i){
+    tmpDuration += this._tweens[i].tween.duration + this._tweens[i].tween.delay;
+  }
+
+  this.duration = this._duration = tmpDuration;
+
+  this._tween.setDuration(this.duration);
+};
+
+proto.start = function(){
+  //if ( !this._currentTween) this._currentTween = this._tweens[0];
+  //this._currentTween.play();
+  this._tween.play();
+};
+
+proto.addTweens = function( tweens ){
+  var i; len = tweens.length;
+
+  for(i = 0; i < len; ++i){
+    this._addTween(tweens[i])
+  }
+};
+
+proto.addTweenAt = function(tween, idx){};
+proto.removeTween = function( tween ){};
+
+  // EVENTS
+proto.onBegin = function(){};
+proto.onEnd = function(){
+  //this._tweens[this._tweens.length - 1]._stop();
+
+  setTimeout(function(){
+    for( var _t in this._tweens ){
+      this._tweens[_t].tween.reverse();
+    }
+
+    this._tween.reverse();
+    this._tween.play();
+  }.bind(this),
+  500);
+};
+
+proto.onUpdate = function(c){
+  this._currentTime = c * this.duration;
+
+  var _tweenReference = this._getTweenAtTime(~~this._currentTime);
+
+  if(_tweenReference){
+    var _tween = _tweenReference.tween;
+    var _inputTime = this._tween._t - _tweenReference.start;
+    _tween.inputTime = _inputTime;
+
+    _tween._step(_inputTime);
+  }
+};
 
 module.exports = Timeline;
 
-},{"./kettle-tween-manager.js":3,"./kettle-tween.js":4,"underscore":7}],3:[function(require,module,exports){
+},{"./kettle-tween-manager.js":3,"./kettle-tween.js":4,"kettle-ease":6,"underscore":7}],3:[function(require,module,exports){
 var TweenManager = {
   // PROPERTIES
   _tweens:[],
@@ -429,6 +375,8 @@ var Tween = function( options ){
   this._t = 0;
   this._motionStack = null;
   this.options = options;
+  this.measurements = null;
+  this.timelineProperties = [];
 
   if (options) this._setOptions(options);
 
@@ -443,6 +391,10 @@ Tween.prototype = {
    },
    _setOptions:function(options){
       for(var key in options){
+        if (key === 'curve'){
+          this._curve = options[key];
+        }
+
         this[key] = options[key];
       }
 
@@ -466,9 +418,7 @@ Tween.prototype = {
    _setMotionFromCurve:function(){
     var c = this._curve;
 
-    console.log(this._curve);
     if (c instanceof Tween.Line !== true){
-      //console.log('not a line');
       var _mo = new MotionObject();
       _mo.d = this.duration;
       _mo.b = c[0];
@@ -536,7 +486,6 @@ Tween.prototype = {
     this._startTime = this.delay;
     this._endTime = (this.delay == 0) ? this.duration : this.duration;
 
-    if (this.onBegin != null) this.onBegin();
     this._previousTime = Date.now();
     this.isAnimating = true;
 
@@ -551,44 +500,47 @@ Tween.prototype = {
    *
    */
 
-   _step:function(c){
-        if (c) this._t = c;
+   _step:function( timeToAdvance ){
+        if ( timeToAdvance ) this._t = timeToAdvance;
         // Get the current time
         this._currentTime = Date.now();
         // Get the difference between the current time and the last time
+        
+        if (this._t < 17 && this.onBegin !== null && !this.isReversed) this.onBegin();
+        else if( this.isReversed && this.onBegin !== null && this._t > this.duration - 16) this.onBegin();
+
         this._delta = this._currentTime - this._previousTime;
         
         // Bottleneck the difference if it is too high
-        this._delta = Math.min(this._delta, 25);
+        this._delta = Math.min(this._delta, 16);
 
         var offsetTime = (this.offsetTime) ? this.offsetTime : this._t + this._delta;
+
         
         // If we are moving forward
         if (!this.isReversed){
             // If the time and the difference is less than the duration
             if ( offsetTime < this._endTime ){
                 // Add this and the adjusted frame step to the tween value
-                this._t = this._delta + this._t;
+                if (!timeToAdvance) this._t = this._delta + this._t;
                 // Continue to the next step
                 this._setProperties();
             // If we are at the end of the tween
             }else{
                 // Set the tween value to the final step
                 this._t = this.duration;
-                this._setProperties();
                 // End the tween
                 this._stop();
             }
         // If we are moving in reverse
         }else{
              // If the tween value is greater than the start (0)
-             if (this._t > 0){
-                // Tween value minus the adjusted frame step or the beginning value
-                this._t = (this._t - this._delta > 0) ? this._t - this._delta : 0;
-                // Continue to the next step
-                //this.animationFrame = window.requestAnimationFrame(this._update.bind(this));
-                this._setProperties();
-
+             if (this._t - this._delta > 0){
+              // Tween value minus the adjusted frame step or the beginning value
+              this._t = (this._t - this._delta > 0) ? this._t - this._delta : 0;
+              // Continue to the next step
+              //this.animationFrame = window.requestAnimationFrame(this._update.bind(this));
+              this._setProperties();
             }else{
               this._stop();
             }
@@ -636,6 +588,7 @@ Tween.prototype = {
                   }
               }
            }
+           //c = Math.min(Math.max(0, c), 1);
            if (this.onUpdate != null) this.onUpdate(c);
         }
    },
@@ -648,11 +601,11 @@ Tween.prototype = {
    _stop:function(){
     this.isAnimating = false;
     this.isCompleted = true;
+
     window.cancelAnimationFrame(this.animationFrame);
-    
+
     this._t = (this.isReversed) ? 0 : this.duration;
     this._setProperties();
-
 
     if (this.onEnd != null && !this.isPaused) this.onEnd();
    },
@@ -761,6 +714,17 @@ Tween.prototype = {
 
       // Let her rip
       this._start();
+
+      return this;
+    },
+    // method to flatten timeline
+    flattenTimeline: function(){
+      var arr = [];
+
+      return arr;
+    },
+
+    recordMeasurements: function(){
     },
 
     // functional methods
@@ -782,6 +746,10 @@ Tween.prototype = {
     ease: function(ease){
       this.ease = ease;
       return this;
+    },
+
+    clone: function(){
+      return new Tween(this.options);
     },
 
     curve:function(curve){

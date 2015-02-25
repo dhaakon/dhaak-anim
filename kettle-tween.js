@@ -105,6 +105,8 @@ var Tween = function( options ){
   this._t = 0;
   this._motionStack = null;
   this.options = options;
+  this.measurements = null;
+  this.timelineProperties = [];
 
   if (options) this._setOptions(options);
 
@@ -119,6 +121,10 @@ Tween.prototype = {
    },
    _setOptions:function(options){
       for(var key in options){
+        if (key === 'curve'){
+          this._curve = options[key];
+        }
+
         this[key] = options[key];
       }
 
@@ -142,9 +148,7 @@ Tween.prototype = {
    _setMotionFromCurve:function(){
     var c = this._curve;
 
-    console.log(this._curve);
     if (c instanceof Tween.Line !== true){
-      //console.log('not a line');
       var _mo = new MotionObject();
       _mo.d = this.duration;
       _mo.b = c[0];
@@ -212,7 +216,6 @@ Tween.prototype = {
     this._startTime = this.delay;
     this._endTime = (this.delay == 0) ? this.duration : this.duration;
 
-    if (this.onBegin != null) this.onBegin();
     this._previousTime = Date.now();
     this.isAnimating = true;
 
@@ -227,44 +230,47 @@ Tween.prototype = {
    *
    */
 
-   _step:function(c){
-        if (c) this._t = c;
+   _step:function( timeToAdvance ){
+        if ( timeToAdvance ) this._t = timeToAdvance;
         // Get the current time
         this._currentTime = Date.now();
         // Get the difference between the current time and the last time
+        
+        if (this._t < 17 && this.onBegin !== null && !this.isReversed) this.onBegin();
+        else if( this.isReversed && this.onBegin !== null && this._t > this.duration - 16) this.onBegin();
+
         this._delta = this._currentTime - this._previousTime;
         
         // Bottleneck the difference if it is too high
-        this._delta = Math.min(this._delta, 25);
+        this._delta = Math.min(this._delta, 16);
 
         var offsetTime = (this.offsetTime) ? this.offsetTime : this._t + this._delta;
+
         
         // If we are moving forward
         if (!this.isReversed){
             // If the time and the difference is less than the duration
             if ( offsetTime < this._endTime ){
                 // Add this and the adjusted frame step to the tween value
-                this._t = this._delta + this._t;
+                if (!timeToAdvance) this._t = this._delta + this._t;
                 // Continue to the next step
                 this._setProperties();
             // If we are at the end of the tween
             }else{
                 // Set the tween value to the final step
                 this._t = this.duration;
-                this._setProperties();
                 // End the tween
                 this._stop();
             }
         // If we are moving in reverse
         }else{
              // If the tween value is greater than the start (0)
-             if (this._t > 0){
-                // Tween value minus the adjusted frame step or the beginning value
-                this._t = (this._t - this._delta > 0) ? this._t - this._delta : 0;
-                // Continue to the next step
-                //this.animationFrame = window.requestAnimationFrame(this._update.bind(this));
-                this._setProperties();
-
+             if (this._t - this._delta > 0){
+              // Tween value minus the adjusted frame step or the beginning value
+              this._t = (this._t - this._delta > 0) ? this._t - this._delta : 0;
+              // Continue to the next step
+              //this.animationFrame = window.requestAnimationFrame(this._update.bind(this));
+              this._setProperties();
             }else{
               this._stop();
             }
@@ -312,6 +318,7 @@ Tween.prototype = {
                   }
               }
            }
+           //c = Math.min(Math.max(0, c), 1);
            if (this.onUpdate != null) this.onUpdate(c);
         }
    },
@@ -324,11 +331,11 @@ Tween.prototype = {
    _stop:function(){
     this.isAnimating = false;
     this.isCompleted = true;
+
     window.cancelAnimationFrame(this.animationFrame);
-    
+
     this._t = (this.isReversed) ? 0 : this.duration;
     this._setProperties();
-
 
     if (this.onEnd != null && !this.isPaused) this.onEnd();
    },
@@ -437,6 +444,17 @@ Tween.prototype = {
 
       // Let her rip
       this._start();
+
+      return this;
+    },
+    // method to flatten timeline
+    flattenTimeline: function(){
+      var arr = [];
+
+      return arr;
+    },
+
+    recordMeasurements: function(){
     },
 
     // functional methods
@@ -458,6 +476,10 @@ Tween.prototype = {
     ease: function(ease){
       this.ease = ease;
       return this;
+    },
+
+    clone: function(){
+      return new Tween(this.options);
     },
 
     curve:function(curve){
