@@ -189,7 +189,7 @@ var TweenManager = {
 module.exports = TweenManager;
 
 },{}],3:[function(require,module,exports){
-/** 
+/**
  *    @constructor
  *    @description A lightweight <b>Tween</b> class independant of Third Party libraries (aside from Robert Penner's easing functions). The engine has Paul Irish's
  *    requestAnimFrame shim built in allowing for consistent animations across browsers and devices.
@@ -221,7 +221,7 @@ module.exports = TweenManager;
  *    target = document.getElementById("target");
  *
  *    var curveOptions = {
- *       node: target, 
+ *       node: target,
  *       duration: 1000,
  *       curve:[0, 100],
  *       onUpdate:function(c){
@@ -238,7 +238,7 @@ module.exports = TweenManager;
  *    target = document.getElementById("target");
  *
  *    var lineOptions = {
- *       node: target, 
+ *       node: target,
  *       duration: 1000,
  *       curve:new Line([0, 0],[100,200]),
  *       onUpdate:function(c){
@@ -248,7 +248,7 @@ module.exports = TweenManager;
  *    }
  *
  *    tween.to(lineOptions);
- *    
+ *
  *
  *    @property {function} onEnd A function to be called at the end of the Tween.
  *    @property {function} onBegin A function to be called at the beginning of the Tween.
@@ -273,26 +273,26 @@ module.exports = TweenManager;
 
 var Tween = function( options ){
   this.onEnd = null;
-  this.onBegin = null; 
+  this.onBegin = null;
   this.onUpdate = null;
   this.delay = 0;
   this.node = null;
   this.duration = 0;
-  this.isAnimating = false; 
-  this.isReversed = false; 
-  this.isPaused = false; 
-  this.properties = null;  
+  this.isAnimating = false;
+  this.isReversed = false;
+  this.isPaused = false;
+  this.properties = null;
   this._curve = [0, 1];
   this.overshoot = 0;
   this._manager = require('./kettle-tween-manager.js');
   this.easing = function(t, b, c, d){
     return c*t/d + b;
   };
-  this._previousTime = null; 
-  this._currentTime = null; 
+  this._previousTime = null;
+  this._currentTime = null;
   this._startTime = 0;
-  this._endTime = null; 
-  this._delta = null; 
+  this._endTime = null;
+  this._delta = null;
   this._t = 0;
   this._motionStack = null;
   this.options = options;
@@ -365,9 +365,9 @@ Tween.prototype = {
    *  Private method which creates a MotionObject based on the property Object passed in
    *  @private {object}     Tween._setMotionFromProperty
    *  @param   {object}     properties           The properties object which should contain standard CSS properties.
-   *  
+   *
    */
-  
+
    _setMotionFromProperty:function(){
          // Each object in the properties object should be a CSS style
            for(var property in this.properties){
@@ -387,7 +387,7 @@ Tween.prototype = {
                  }
               // If not use the value as the end
               }else{
-                 this.change = _property - this.begin;                 
+                 this.change = _property - this.begin;
               }
 
               this._motionStack.push(_mo);
@@ -416,7 +416,7 @@ Tween.prototype = {
    },
 
   /**
-   * Steps the tween 
+   * Steps the tween
    * @private {object}    Tween._step
    *
    */
@@ -426,18 +426,15 @@ Tween.prototype = {
         // Get the current time
         this._currentTime = Date.now();
         // Get the difference between the current time and the last time
-        
         if (this._t < 17 && this.onBegin !== null && !this.isReversed) this.onBegin();
         else if( this.isReversed && this.onBegin !== null && this._t > this.duration - 16) this.onBegin();
 
         this._delta = this._currentTime - this._previousTime;
-        
         // Bottleneck the difference if it is too high
         this._delta = Math.min(this._delta, 16);
 
         var offsetTime = (this.offsetTime) ? this.offsetTime : this._t + this._delta;
 
-        
         // If we are moving forward
         if (!this.isReversed){
             // If the time and the difference is less than the duration
@@ -514,7 +511,7 @@ Tween.prototype = {
         }
    },
   /**
-   * Stops the tween 
+   * Stops the tween
    * @private {object}    Tween._stop
    *
    */
@@ -532,7 +529,7 @@ Tween.prototype = {
    },
 
   /**
-   * Updates the tween 
+   * Updates the tween
    * @private {object}    Tween._update
    *
    */
@@ -550,13 +547,14 @@ Tween.prototype = {
    },
 
   /**
-   * Reverses the tween 
+   * Reverses the tween
    * @public {object}    Tween.reverse
    *
    */
 
    reverse:function(){
      this.isReversed = !this.isReversed;
+     return this;
    },
 
   /**
@@ -578,7 +576,7 @@ Tween.prototype = {
    },
 
   /**
-   * the user can manually add a wait method to a tween which would delay the 
+   * the user can manually add a wait method to a tween which would delay the
    * progress mid-tween
    * @public {object}    Tween.wait
    *
@@ -586,7 +584,7 @@ Tween.prototype = {
 
 
   /**
-   * Pauses the tween 
+   * Pauses the tween
    * @public {object}    Tween.pause
    *
    */
@@ -639,6 +637,7 @@ Tween.prototype = {
       return this;
     },
     // method to flatten timeline
+    // @TODO
     flattenTimeline: function(){
       var arr = [];
 
@@ -673,6 +672,11 @@ Tween.prototype = {
       return new Tween(this.options);
     },
 
+    startTime : function( time ){
+      this._startTime = time;
+      return this;
+    },
+
     curve:function(curve){
       this._curve = curve;
       this._motionStack = [];
@@ -682,7 +686,9 @@ Tween.prototype = {
 
     setDuration:function( duration ){
       this.duration = this._endTime = this._duration = duration;
+      return this;
     },
+
     getCurrentFrame:function(){
       return Math.ceil((this._t / this.duration) * this._getTotalFrames());
     },
@@ -723,11 +729,11 @@ Tween.Line = function(a, b){
  */
 
 window.requestAnimFrame = (function(){
-  return  window.requestAnimationFrame       || 
-          window.webkitRequestAnimationFrame || 
-          window.mozRequestAnimationFrame    || 
-          window.oRequestAnimationFrame      || 
-          window.msRequestAnimationFrame     || 
+  return  window.requestAnimationFrame       ||
+          window.webkitRequestAnimationFrame ||
+          window.mozRequestAnimationFrame    ||
+          window.oRequestAnimationFrame      ||
+          window.msRequestAnimationFrame     ||
           function( callback ){
                   window.setTimeout(callback, 1000 / 60);
           };

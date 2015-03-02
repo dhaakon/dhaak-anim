@@ -1,6 +1,6 @@
 {
   "name": "kettle-tween",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Simple lightweight tween class.",
   "main": "kettle-tween.js",
   "scripts": {

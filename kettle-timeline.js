@@ -2,14 +2,17 @@ var _ = require("underscore");
 var Tween = require('./kettle-tween.js');
 
 var TweenManager = require('./kettle-tween-manager.js');
+var round = Math.round;
 
 var Timeline = function( options ){
   this.init( options );
 };
 
-var proto = Timeline.prototype;
+// References the tween class
+var proto = Timeline.prototype = new Tween();
 
 proto.init = function( options ){
+  this._type = 'timeline';
   this._tweens = [];
 
   this._tail = null;
@@ -19,7 +22,7 @@ proto.init = function( options ){
   this._previousTween = null;
   this._nextTween = null;
 
-  this._currentTweenIdx = 0;
+  //this._currentTweenIdx = 0;
   this._numTweens = 0;
 
   this._tween = null;
@@ -62,7 +65,7 @@ proto._setupMainTween = function(){
     curve:[0,1]
   }
 
-  this._tween = new Tween(options);
+  this._setOptions(options);
 };
 
 proto._setupWithOptions = function( options ){
@@ -79,18 +82,17 @@ proto._getTweenAtTime = function(time){
     var _t =  this._tweens[i];
     if(time > _t.start && time < _t.end){
       if (!_t.isPaused){
-        //this._tween._t = _t.end;
-
+/*
         if (this._tweens.indexOf(_t) !== this._currentTweenIdx){
           this._previousTweenIdx = this._currentTweenIdx || 0;
 
           var _prevTween = this._tweens[this._previousTweenIdx];
           var _tmp = _prevTween.tween;
         }
+*/
+        //this._currentTweenIdx = this._tweens.indexOf(_t);
 
-        this._currentTweenIdx = this._tweens.indexOf(_t);
-
-        return this._tweens[this._currentTweenIdx];
+        return this._tweens[ this._tweens.indexOf(_t) ];
       }
     }
   }
@@ -105,13 +107,17 @@ proto._setDuration = function(){
 
   this.duration = this._duration = tmpDuration;
 
-  this._tween.setDuration(this.duration);
+  this.setDuration(this.duration);
 };
+
+/*
+ * Overwritten method
+ */
 
 proto.start = function(){
   //if ( !this._currentTween) this._currentTween = this._tweens[0];
   //this._currentTween.play();
-  this._tween.play();
+  this.play();
 };
 
 proto.addTweens = function( tweens ){
@@ -125,30 +131,39 @@ proto.addTweens = function( tweens ){
 proto.addTweenAt = function(tween, idx){};
 proto.removeTween = function( tween ){};
 
+proto.loop = function( bool ){
+  this._loop = bool;
+  return this;
+};
+
   // EVENTS
 proto.onBegin = function(){};
 proto.onEnd = function(){
   //this._tweens[this._tweens.length - 1]._stop();
 
-  setTimeout(function(){
-    for( var _t in this._tweens ){
-      this._tweens[_t].tween.reverse();
-    }
+  if(this._loop){
+    setTimeout(function(){
+        for( var _t in this._tweens ){
+          this._tweens[_t].tween.reverse();
+        }
 
-    this._tween.reverse();
-    this._tween.play();
-  }.bind(this),
-  500);
+        this.reverse();
+        this.play();
+      }.bind(this),
+    1);
+    }
 };
 
 proto.onUpdate = function(c){
   this._currentTime = c * this.duration;
 
-  var _tweenReference = this._getTweenAtTime(~~this._currentTime);
+  var _tweenReference = this._getTweenAtTime(round(this._currentTime));
 
   if(_tweenReference){
     var _tween = _tweenReference.tween;
-    var _inputTime = this._tween._t - _tweenReference.start;
+    var _inputTime = this._t - _tweenReference.start;
+
+    console.log(this._t);
     _tween.inputTime = _inputTime;
 
     _tween._step(_inputTime);

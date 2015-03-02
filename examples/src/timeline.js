@@ -5,6 +5,8 @@ var _ = require('underscore');
 var d3 = require('d3');
 
 (function init(){
+  var cos = Math.cos, sin = Math.sin;
+
   console.log("Timeline example");
 
   var createCircle = function(){
@@ -26,35 +28,33 @@ var d3 = require('d3');
 
   document.body.appendChild(circle);
 
-  var tween1options = {
-    duration: 1000,
-    delay:300,
-    curve:new Tween.Line( [   0,    0,  50,    0,  300 ],
-                          [ 360,  360,  50,  1.5,  300 ]),
-    easing:Easing.easeInOutQuad,
-    onBegin:function(){
-      console.log('1 start');
-    },
-    onUpdate:function(c){
-      var _r = c[2] * c[3];
-      var _x = Math.cos(c[0] * ((Math.PI * 2) / 180)) * _r;
-      var _y = Math.sin(c[1] * ((Math.PI * 2) / 180)) * _r;
-      var _offset = c[4];
+  var tween1 = new Tween( { duration: 1000, delay: 100 } );
 
-      var rx = 0, ry = 0, rz = 0;
+  tween1.curve(new Tween.Line( [   0,    0,  50,    0,  300 ],
+                               [ 360,  360,  50,  1.5,  300 ]))
+        .ease(Easing.easeInOutQuad)
+        .begin(function(){
+          console.log('1 start');
+        })
+        .update(function(c){
+            var _r = c[2] * c[3];
+            var _x = cos(c[0] * ((Math.PI * 2) / 180)) * _r;
+            var _y = sin(c[1] * ((Math.PI * 2) / 180)) * _r;
+            var _offset = c[4];
 
-      mat = new WebKitCSSMatrix('scale(' + c[3] + ')').rotate( rx, ry, rz ).translate( _x, _y,0).toString();
+            var rx = 0, ry = 0, rz = 70;
 
-      circle.style['-webkit-transform'] = mat
-    },
-    onEnd:function(){
-      console.log('1 end');
-    }
-  }
+            mat = new WebKitCSSMatrix('scale(' + c[3] + ')').rotate( rx, ry, rz ).translate( _x, _y, 0).toString();
+
+            circle.style['-webkit-transform'] = mat
+        })
+        .end(function(){
+          console.log('1 end');
+        });
 
   var tween2options = {
     duration: 400,
-    delay:2000,
+    delay:200,
     curve:new Tween.Line([1,100],[ 10, 255 ]),
     easing:Easing.easeInQuad,
     onUpdate:function(c){
@@ -67,18 +67,18 @@ var d3 = require('d3');
     }
   }
 
-  var tween1 = new Tween( tween1options );
   var tween2 = new Tween( tween2options );
 
   var options = {
     duration: 1000
-  }
+  };
 
   var tween1clone = tween1.clone();
   tween1clone.reverse();
 
   var timeline = new Timeline( options );
-  timeline.addTweens([ tween1, tween2 ]);
+  timeline.addTweens([ tween1, tween1]);
+  timeline.loop( true );
 
   setTimeout(function(){
     timeline.start();
