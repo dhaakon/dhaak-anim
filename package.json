@@ -1,6 +1,6 @@
 {
   "name": "dhaak-anim",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Simple lightweight tween class for my animations.",
   "main": "dhaak-anim.js",
   "scripts": {
