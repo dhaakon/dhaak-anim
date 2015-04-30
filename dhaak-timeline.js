@@ -1,7 +1,7 @@
 var _ = require("underscore");
-var Tween = require('./kettle-tween.js');
+var Tween = require('./dhaak-tween.js');
 
-var TweenManager = require('./kettle-tween-manager.js');
+var TweenManager = require('./dhaak-tween-manager.js');
 var round = Math.round;
 
 var Timeline = function( options ){
@@ -58,7 +58,7 @@ proto._addTween = function( tween ){
 proto._setupMainTween = function(){
   var options = {
     node:this,
-    easing:require('kettle-ease').linear,
+    easing:require('penner').linear,
     onUpdate:this.onUpdate.bind(this),
     onBegin:this.onBegin,
     onEnd:this.onEnd.bind(this),

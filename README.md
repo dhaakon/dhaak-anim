@@ -8,8 +8,8 @@ A simple tween class independant from third party libraries.
 ## Installation
 
 ```
-npm install kettle-tween
-git clone https://github.com/davidpoyner/kettle-tween
+npm install dhaak-anim 
+git clone https://github.com/dhaakon/dhaak-anim
 ```
 
 ## Examples
@@ -22,7 +22,7 @@ Check out the source code in `/examples/src/app.js`
 
 
 ## Usage
-Kettle Tween is based off of dojo's tweening syntax. The user provides
+Dhaak Tween is based off of dojo's tweening syntax. The user provides
 an easing function, a target node, and a callback and the tween engine
 does the rest. For example, to tween a circle 200 pixels to the right we
 would do the following:
@@ -52,7 +52,7 @@ tween.play(options)
 ```
 
 ### Curve/Line objects
-Kettle Tween relies on either a curve or line object in order to advance the animation. The curve object is an array containing start and finish values, like so:
+Dhaak Tween relies on either a curve or line object in order to advance the animation. The curve object is an array containing start and finish values, like so:
 
 `curve = [ 0, 100 ]`
 

@@ -1,97 +1,8 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var Timeline = require('../../kettle-timeline.js');
-var Tween = require('../../kettle-tween.js');
-var Easing = require('kettle-ease');
-var _ = require('underscore');
-var d3 = require('d3');
-
-(function init(){
-  var cos = Math.cos, sin = Math.sin;
-
-  console.log("Timeline example");
-
-  var createCircle = function(){
-    var _circle = document.createElement("div");
-    _circle.style.width = "20px";
-    _circle.style.left = "400px";
-    _circle.style.top = "200px";
-    _circle.style.height = "20px";
-    _circle.style.display = "block";
-    _circle.style.background = "red";
-    _circle.style.borderRadius = "10px";
-    _circle.style.position = "absolute";
-    _circle.style['-webkit-transform'] = "scale(0)";
-
-    return _circle;
-  }
-
-  var circle = createCircle();
-
-  document.body.appendChild(circle);
-
-  var tween1 = new Tween( { duration: 1000, delay: 100 } );
-
-  tween1.curve(new Tween.Line( [   0,    0,  50,    0,  300 ],
-                               [ 360,  360,  50,  1.5,  300 ]))
-        .ease(Easing.easeInOutQuad)
-        .begin(function(){
-          console.log('1 start');
-        })
-        .update(function(c){
-            var _r = c[2] * c[3];
-            var _x = cos(c[0] * ((Math.PI * 2) / 180)) * _r;
-            var _y = sin(c[1] * ((Math.PI * 2) / 180)) * _r;
-            var _offset = c[4];
-
-            var rx = 0, ry = 0, rz = 70;
-
-            mat = new WebKitCSSMatrix('scale(' + c[3] + ')').rotate( rx, ry, rz ).translate( _x, _y, 0).toString();
-
-            circle.style['-webkit-transform'] = mat
-        })
-        .end(function(){
-          console.log('1 end');
-        });
-
-  var tween2options = {
-    duration: 400,
-    delay:200,
-    curve:new Tween.Line([1,100],[ 10, 255 ]),
-    easing:Easing.easeInQuad,
-    onUpdate:function(c){
-      var b = Math.round(c[1]);
-      circle.style['-webkit-transform'] = new WebKitCSSMatrix(circle.style['-webkit-transform']).rotate(180,0,1).toString();
-      circle.style.background = 'rgb(' + b + ',0,' + b + ')';
-      circle.style.border = c[0] + 'px red';
-    },
-    onEnd:function(){
-    }
-  }
-
-  var tween2 = new Tween( tween2options );
-
-  var options = {
-    duration: 1000
-  };
-
-  var tween1clone = tween1.clone();
-  tween1clone.reverse();
-
-  var timeline = new Timeline( options );
-  timeline.addTweens([ tween1, tween1]);
-  timeline.loop( true );
-
-  setTimeout(function(){
-    timeline.start();
-  }, 200);
-
-})()
-
-},{"../../kettle-timeline.js":2,"../../kettle-tween.js":4,"d3":5,"kettle-ease":6,"underscore":7}],2:[function(require,module,exports){
 var _ = require("underscore");
-var Tween = require('./kettle-tween.js');
+var Tween = require('./dhaak-tween.js');
 
-var TweenManager = require('./kettle-tween-manager.js');
+var TweenManager = require('./dhaak-tween-manager.js');
 var round = Math.round;
 
 var Timeline = function( options ){
@@ -148,7 +59,7 @@ proto._addTween = function( tween ){
 proto._setupMainTween = function(){
   var options = {
     node:this,
-    easing:require('kettle-ease').linear,
+    easing:require('penner').linear,
     onUpdate:this.onUpdate.bind(this),
     onBegin:this.onBegin,
     onEnd:this.onEnd.bind(this),
@@ -262,7 +173,7 @@ proto.onUpdate = function(c){
 
 module.exports = Timeline;
 
-},{"./kettle-tween-manager.js":3,"./kettle-tween.js":4,"kettle-ease":6,"underscore":7}],3:[function(require,module,exports){
+},{"./dhaak-tween-manager.js":2,"./dhaak-tween.js":3,"penner":6,"underscore":7}],2:[function(require,module,exports){
 var TweenManager = {
   // PROPERTIES
   _tweens:[],
@@ -282,7 +193,7 @@ var TweenManager = {
 
 module.exports = TweenManager;
 
-},{}],4:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 /**
  *    @constructor
  *    @description A lightweight <b>Tween</b> class independant of Third Party libraries (aside from Robert Penner's easing functions). The engine has Paul Irish's
@@ -378,7 +289,7 @@ var Tween = function( options ){
   this.properties = null;
   this._curve = [0, 1];
   this.overshoot = 0;
-  this._manager = require('./kettle-tween-manager.js');
+  this._manager = require('./dhaak-tween-manager.js');
   this.easing = function(t, b, c, d){
     return c*t/d + b;
   };
@@ -835,40 +746,139 @@ window.requestAnimFrame = (function(){
 
 module.exports = Tween;
 
-},{"./kettle-tween-manager.js":3}],5:[function(require,module,exports){
+},{"./dhaak-tween-manager.js":2}],4:[function(require,module,exports){
+var Timeline = require('../../dhaak-timeline.js');
+var Tween = require('../../dhaak-tween.js');
+var Easing = require('penner');
+var _ = require('underscore');
+var d3 = require('d3');
+
+(function init(){
+  var cos = Math.cos, sin = Math.sin;
+
+  console.log("Timeline example");
+
+  var createCircle = function(){
+    var _circle = document.createElement("div");
+    _circle.style.width = "20px";
+    _circle.style.left = "400px";
+    _circle.style.top = "200px";
+    _circle.style.height = "20px";
+    _circle.style.display = "block";
+    _circle.style.background = "red";
+    _circle.style.borderRadius = "10px";
+    _circle.style.position = "absolute";
+    _circle.style['-webkit-transform'] = "scale(0)";
+
+    return _circle;
+  }
+
+  var circle = createCircle();
+
+  document.body.appendChild(circle);
+
+  var tween1 = new Tween( { duration: 1000, delay: 100 } );
+
+  tween1.curve(new Tween.Line( [   0,    0,  50,    0,  300 ],
+                               [ 360,  360,  50,  1.5,  300 ]))
+        .ease(Easing.easeInOutQuad)
+        .begin(function(){
+          console.log('1 start');
+        })
+        .update(function(c){
+            var _r = c[2] * c[3];
+            var _x = cos(c[0] * ((Math.PI * 2) / 180)) * _r;
+            var _y = sin(c[1] * ((Math.PI * 2) / 180)) * _r;
+            var _offset = c[4];
+
+            var rx = 0, ry = 0, rz = 70;
+
+            mat = new WebKitCSSMatrix('scale(' + c[3] + ')').rotate( rx, ry, rz ).translate( _x, _y, 0).toString();
+
+            circle.style['-webkit-transform'] = mat
+        })
+        .end(function(){
+          console.log('1 end');
+        });
+
+  var tween2options = {
+    duration: 400,
+    delay:200,
+    curve:new Tween.Line([1,100],[ 10, 255 ]),
+    easing:Easing.easeInQuad,
+    onUpdate:function(c){
+      var b = Math.round(c[1]);
+      circle.style['-webkit-transform'] = new WebKitCSSMatrix(circle.style['-webkit-transform']).rotate(180,0,1).toString();
+      circle.style.background = 'rgb(' + b + ',0,' + b + ')';
+      circle.style.border = c[0] + 'px red';
+    },
+    onEnd:function(){
+    }
+  }
+
+  var tween2 = new Tween( tween2options );
+
+  var options = {
+    duration: 1000
+  };
+
+  var tween1clone = tween1.clone();
+  tween1clone.reverse();
+
+  var timeline = new Timeline( options );
+  timeline.addTweens([ tween1, tween1]);
+  timeline.loop( true );
+
+  setTimeout(function(){
+    timeline.start();
+  }, 200);
+
+})()
+
+},{"../../dhaak-timeline.js":1,"../../dhaak-tween.js":3,"d3":5,"penner":6,"underscore":7}],5:[function(require,module,exports){
 !function() {
   var d3 = {
-    version: "3.5.3"
-  };
-  if (!Date.now) Date.now = function() {
-    return +new Date();
+    version: "3.5.5"
   };
   var d3_arraySlice = [].slice, d3_array = function(list) {
     return d3_arraySlice.call(list);
   };
-  var d3_document = document, d3_documentElement = d3_document.documentElement, d3_window = window;
-  try {
-    d3_array(d3_documentElement.childNodes)[0].nodeType;
-  } catch (e) {
-    d3_array = function(list) {
-      var i = list.length, array = new Array(i);
-      while (i--) array[i] = list[i];
-      return array;
-    };
+  var d3_document = this.document;
+  function d3_documentElement(node) {
+    return node && (node.ownerDocument || node.document || node).documentElement;
   }
-  try {
-    d3_document.createElement("div").style.setProperty("opacity", 0, "");
-  } catch (error) {
-    var d3_element_prototype = d3_window.Element.prototype, d3_element_setAttribute = d3_element_prototype.setAttribute, d3_element_setAttributeNS = d3_element_prototype.setAttributeNS, d3_style_prototype = d3_window.CSSStyleDeclaration.prototype, d3_style_setProperty = d3_style_prototype.setProperty;
-    d3_element_prototype.setAttribute = function(name, value) {
-      d3_element_setAttribute.call(this, name, value + "");
-    };
-    d3_element_prototype.setAttributeNS = function(space, local, value) {
-      d3_element_setAttributeNS.call(this, space, local, value + "");
-    };
-    d3_style_prototype.setProperty = function(name, value, priority) {
-      d3_style_setProperty.call(this, name, value + "", priority);
-    };
+  function d3_window(node) {
+    return node && (node.ownerDocument && node.ownerDocument.defaultView || node.document && node || node.defaultView);
+  }
+  if (d3_document) {
+    try {
+      d3_array(d3_document.documentElement.childNodes)[0].nodeType;
+    } catch (e) {
+      d3_array = function(list) {
+        var i = list.length, array = new Array(i);
+        while (i--) array[i] = list[i];
+        return array;
+      };
+    }
+  }
+  if (!Date.now) Date.now = function() {
+    return +new Date();
+  };
+  if (d3_document) {
+    try {
+      d3_document.createElement("DIV").style.setProperty("opacity", 0, "");
+    } catch (error) {
+      var d3_element_prototype = this.Element.prototype, d3_element_setAttribute = d3_element_prototype.setAttribute, d3_element_setAttributeNS = d3_element_prototype.setAttributeNS, d3_style_prototype = this.CSSStyleDeclaration.prototype, d3_style_setProperty = d3_style_prototype.setProperty;
+      d3_element_prototype.setAttribute = function(name, value) {
+        d3_element_setAttribute.call(this, name, value + "");
+      };
+      d3_element_prototype.setAttributeNS = function(space, local, value) {
+        d3_element_setAttributeNS.call(this, space, local, value + "");
+      };
+      d3_style_prototype.setProperty = function(name, value, priority) {
+        d3_style_setProperty.call(this, name, value + "", priority);
+      };
+    }
   }
   d3.ascending = d3_ascending;
   function d3_ascending(a, b) {
@@ -1281,6 +1291,9 @@ module.exports = Tween;
     }
   });
   d3.behavior = {};
+  function d3_identity(d) {
+    return d;
+  }
   d3.rebind = function(target, source) {
     var i = 1, n = arguments.length, method;
     while (++i < n) target[method = arguments[i]] = d3_rebind(target, source, source[method]);
@@ -1387,8 +1400,12 @@ module.exports = Tween;
     return n.querySelector(s);
   }, d3_selectAll = function(s, n) {
     return n.querySelectorAll(s);
-  }, d3_selectMatcher = d3_documentElement.matches || d3_documentElement[d3_vendorSymbol(d3_documentElement, "matchesSelector")], d3_selectMatches = function(n, s) {
-    return d3_selectMatcher.call(n, s);
+  }, d3_selectMatches = function(n, s) {
+    var d3_selectMatcher = n.matches || n[d3_vendorSymbol(n, "matchesSelector")];
+    d3_selectMatches = function(n, s) {
+      return d3_selectMatcher.call(n, s);
+    };
+    return d3_selectMatches(n, s);
   };
   if (typeof Sizzle === "function") {
     d3_select = function(s, n) {
@@ -1398,7 +1415,7 @@ module.exports = Tween;
     d3_selectMatches = Sizzle.matchesSelector;
   }
   d3.selection = function() {
-    return d3_selectionRoot;
+    return d3.select(d3_document.documentElement);
   };
   var d3_selectionPrototype = d3.selection.prototype = [];
   d3_selectionPrototype.select = function(selector) {
@@ -1558,7 +1575,10 @@ module.exports = Tween;
         for (priority in name) this.each(d3_selection_style(priority, name[priority], value));
         return this;
       }
-      if (n < 2) return d3_window.getComputedStyle(this.node(), null).getPropertyValue(name);
+      if (n < 2) {
+        var node = this.node();
+        return d3_window(node).getComputedStyle(node, null).getPropertyValue(name);
+      }
       priority = "";
     }
     return this.each(d3_selection_style(name, value, priority));
@@ -1624,11 +1644,14 @@ module.exports = Tween;
     });
   };
   function d3_selection_creator(name) {
-    return typeof name === "function" ? name : (name = d3.ns.qualify(name)).local ? function() {
+    function create() {
+      var document = this.ownerDocument, namespace = this.namespaceURI;
+      return namespace ? document.createElementNS(namespace, name) : document.createElement(name);
+    }
+    function createNS() {
       return this.ownerDocument.createElementNS(name.space, name.local);
-    } : function() {
-      return this.ownerDocument.createElementNS(this.namespaceURI, name);
-    };
+    }
+    return typeof name === "function" ? name : (name = d3.ns.qualify(name)).local ? createNS : create;
   }
   d3_selectionPrototype.insert = function(name, before) {
     name = d3_selection_creator(name);
@@ -1853,16 +1876,27 @@ module.exports = Tween;
     };
   }
   d3.select = function(node) {
-    var group = [ typeof node === "string" ? d3_select(node, d3_document) : node ];
-    group.parentNode = d3_documentElement;
+    var group;
+    if (typeof node === "string") {
+      group = [ d3_select(node, d3_document) ];
+      group.parentNode = d3_document.documentElement;
+    } else {
+      group = [ node ];
+      group.parentNode = d3_documentElement(node);
+    }
     return d3_selection([ group ]);
   };
   d3.selectAll = function(nodes) {
-    var group = d3_array(typeof nodes === "string" ? d3_selectAll(nodes, d3_document) : nodes);
-    group.parentNode = d3_documentElement;
+    var group;
+    if (typeof nodes === "string") {
+      group = d3_array(d3_selectAll(nodes, d3_document));
+      group.parentNode = d3_document.documentElement;
+    } else {
+      group = nodes;
+      group.parentNode = null;
+    }
     return d3_selection([ group ]);
   };
-  var d3_selectionRoot = d3.select(d3_documentElement);
   d3_selectionPrototype.on = function(type, listener, capture) {
     var n = arguments.length;
     if (n < 3) {
@@ -1910,9 +1944,11 @@ module.exports = Tween;
     mouseenter: "mouseover",
     mouseleave: "mouseout"
   });
-  d3_selection_onFilters.forEach(function(k) {
-    if ("on" + k in d3_document) d3_selection_onFilters.remove(k);
-  });
+  if (d3_document) {
+    d3_selection_onFilters.forEach(function(k) {
+      if ("on" + k in d3_document) d3_selection_onFilters.remove(k);
+    });
+  }
   function d3_selection_onListener(listener, argumentz) {
     return function(e) {
       var o = d3.event;
@@ -1934,11 +1970,14 @@ module.exports = Tween;
       }
     };
   }
-  var d3_event_dragSelect = "onselectstart" in d3_document ? null : d3_vendorSymbol(d3_documentElement.style, "userSelect"), d3_event_dragId = 0;
-  function d3_event_dragSuppress() {
-    var name = ".dragsuppress-" + ++d3_event_dragId, click = "click" + name, w = d3.select(d3_window).on("touchmove" + name, d3_eventPreventDefault).on("dragstart" + name, d3_eventPreventDefault).on("selectstart" + name, d3_eventPreventDefault);
+  var d3_event_dragSelect, d3_event_dragId = 0;
+  function d3_event_dragSuppress(node) {
+    var name = ".dragsuppress-" + ++d3_event_dragId, click = "click" + name, w = d3.select(d3_window(node)).on("touchmove" + name, d3_eventPreventDefault).on("dragstart" + name, d3_eventPreventDefault).on("selectstart" + name, d3_eventPreventDefault);
+    if (d3_event_dragSelect == null) {
+      d3_event_dragSelect = "onselectstart" in node ? false : d3_vendorSymbol(node.style, "userSelect");
+    }
     if (d3_event_dragSelect) {
-      var style = d3_documentElement.style, select = style[d3_event_dragSelect];
+      var style = d3_documentElement(node).style, select = style[d3_event_dragSelect];
       style[d3_event_dragSelect] = "none";
     }
     return function(suppressClick) {
@@ -1959,24 +1998,27 @@ module.exports = Tween;
   d3.mouse = function(container) {
     return d3_mousePoint(container, d3_eventSource());
   };
-  var d3_mouse_bug44083 = /WebKit/.test(d3_window.navigator.userAgent) ? -1 : 0;
+  var d3_mouse_bug44083 = this.navigator && /WebKit/.test(this.navigator.userAgent) ? -1 : 0;
   function d3_mousePoint(container, e) {
     if (e.changedTouches) e = e.changedTouches[0];
     var svg = container.ownerSVGElement || container;
     if (svg.createSVGPoint) {
       var point = svg.createSVGPoint();
-      if (d3_mouse_bug44083 < 0 && (d3_window.scrollX || d3_window.scrollY)) {
-        svg = d3.select("body").append("svg").style({
-          position: "absolute",
-          top: 0,
-          left: 0,
-          margin: 0,
-          padding: 0,
-          border: "none"
-        }, "important");
-        var ctm = svg[0][0].getScreenCTM();
-        d3_mouse_bug44083 = !(ctm.f || ctm.e);
-        svg.remove();
+      if (d3_mouse_bug44083 < 0) {
+        var window = d3_window(container);
+        if (window.scrollX || window.scrollY) {
+          svg = d3.select("body").append("svg").style({
+            position: "absolute",
+            top: 0,
+            left: 0,
+            margin: 0,
+            padding: 0,
+            border: "none"
+          }, "important");
+          var ctm = svg[0][0].getScreenCTM();
+          d3_mouse_bug44083 = !(ctm.f || ctm.e);
+          svg.remove();
+        }
       }
       if (d3_mouse_bug44083) point.x = e.pageX, point.y = e.pageY; else point.x = e.clientX, 
       point.y = e.clientY;
@@ -1995,13 +2037,13 @@ module.exports = Tween;
     }
   };
   d3.behavior.drag = function() {
-    var event = d3_eventDispatch(drag, "drag", "dragstart", "dragend"), origin = null, mousedown = dragstart(d3_noop, d3.mouse, d3_behavior_dragMouseSubject, "mousemove", "mouseup"), touchstart = dragstart(d3_behavior_dragTouchId, d3.touch, d3_behavior_dragTouchSubject, "touchmove", "touchend");
+    var event = d3_eventDispatch(drag, "drag", "dragstart", "dragend"), origin = null, mousedown = dragstart(d3_noop, d3.mouse, d3_window, "mousemove", "mouseup"), touchstart = dragstart(d3_behavior_dragTouchId, d3.touch, d3_identity, "touchmove", "touchend");
     function drag() {
       this.on("mousedown.drag", mousedown).on("touchstart.drag", touchstart);
     }
     function dragstart(id, position, subject, move, end) {
       return function() {
-        var that = this, target = d3.event.target, parent = that.parentNode, dispatch = event.of(that, arguments), dragged = 0, dragId = id(), dragName = ".drag" + (dragId == null ? "" : "-" + dragId), dragOffset, dragSubject = d3.select(subject()).on(move + dragName, moved).on(end + dragName, ended), dragRestore = d3_event_dragSuppress(), position0 = position(parent, dragId);
+        var that = this, target = d3.event.target, parent = that.parentNode, dispatch = event.of(that, arguments), dragged = 0, dragId = id(), dragName = ".drag" + (dragId == null ? "" : "-" + dragId), dragOffset, dragSubject = d3.select(subject(target)).on(move + dragName, moved).on(end + dragName, ended), dragRestore = d3_event_dragSuppress(target), position0 = position(parent, dragId);
         if (origin) {
           dragOffset = origin.apply(that, arguments);
           dragOffset = [ dragOffset.x - position0[0], dragOffset.y - position0[1] ];
@@ -2045,12 +2087,6 @@ module.exports = Tween;
   };
   function d3_behavior_dragTouchId() {
     return d3.event.changedTouches[0].identifier;
-  }
-  function d3_behavior_dragTouchSubject() {
-    return d3.event.target;
-  }
-  function d3_behavior_dragMouseSubject() {
-    return d3_window;
   }
   d3.touches = function(container, touches) {
     if (arguments.length < 2) touches = d3_eventSource().touches;
@@ -2106,6 +2142,15 @@ module.exports = Tween;
       y: 0,
       k: 1
     }, translate0, center0, center, size = [ 960, 500 ], scaleExtent = d3_behavior_zoomInfinity, duration = 250, zooming = 0, mousedown = "mousedown.zoom", mousemove = "mousemove.zoom", mouseup = "mouseup.zoom", mousewheelTimer, touchstart = "touchstart.zoom", touchtime, event = d3_eventDispatch(zoom, "zoomstart", "zoom", "zoomend"), x0, x1, y0, y1;
+    if (!d3_behavior_zoomWheel) {
+      d3_behavior_zoomWheel = "onwheel" in d3_document ? (d3_behavior_zoomDelta = function() {
+        return -d3.event.deltaY * (d3.event.deltaMode ? 120 : 1);
+      }, "wheel") : "onmousewheel" in d3_document ? (d3_behavior_zoomDelta = function() {
+        return d3.event.wheelDelta;
+      }, "mousewheel") : (d3_behavior_zoomDelta = function() {
+        return -d3.event.detail;
+      }, "MozMousePixelScroll");
+    }
     function zoom(g) {
       g.on(mousedown, mousedowned).on(d3_behavior_zoomWheel + ".zoom", mousewheeled).on("dblclick.zoom", dblclicked).on(touchstart, touchstarted);
     }
@@ -2260,7 +2305,7 @@ module.exports = Tween;
       center0 = null;
     }
     function mousedowned() {
-      var that = this, target = d3.event.target, dispatch = event.of(that, arguments), dragged = 0, subject = d3.select(d3_window).on(mousemove, moved).on(mouseup, ended), location0 = location(d3.mouse(that)), dragRestore = d3_event_dragSuppress();
+      var that = this, target = d3.event.target, dispatch = event.of(that, arguments), dragged = 0, subject = d3.select(d3_window(that)).on(mousemove, moved).on(mouseup, ended), location0 = location(d3.mouse(that)), dragRestore = d3_event_dragSuppress(that);
       d3_selection_interrupt.call(that);
       zoomstarted(dispatch);
       function moved() {
@@ -2275,7 +2320,7 @@ module.exports = Tween;
       }
     }
     function touchstarted() {
-      var that = this, dispatch = event.of(that, arguments), locations0 = {}, distance0 = 0, scale0, zoomName = ".zoom-" + d3.event.changedTouches[0].identifier, touchmove = "touchmove" + zoomName, touchend = "touchend" + zoomName, targets = [], subject = d3.select(that), dragRestore = d3_event_dragSuppress();
+      var that = this, dispatch = event.of(that, arguments), locations0 = {}, distance0 = 0, scale0, zoomName = ".zoom-" + d3.event.changedTouches[0].identifier, touchmove = "touchmove" + zoomName, touchend = "touchend" + zoomName, targets = [], subject = d3.select(that), dragRestore = d3_event_dragSuppress(that);
       started();
       zoomstarted(dispatch);
       subject.on(mousedown, null).on(touchstart, started);
@@ -2363,14 +2408,7 @@ module.exports = Tween;
     }
     return d3.rebind(zoom, event, "on");
   };
-  var d3_behavior_zoomInfinity = [ 0, Infinity ];
-  var d3_behavior_zoomDelta, d3_behavior_zoomWheel = "onwheel" in d3_document ? (d3_behavior_zoomDelta = function() {
-    return -d3.event.deltaY * (d3.event.deltaMode ? 120 : 1);
-  }, "wheel") : "onmousewheel" in d3_document ? (d3_behavior_zoomDelta = function() {
-    return d3.event.wheelDelta;
-  }, "mousewheel") : (d3_behavior_zoomDelta = function() {
-    return -d3.event.detail;
-  }, "MozMousePixelScroll");
+  var d3_behavior_zoomInfinity = [ 0, Infinity ], d3_behavior_zoomDelta, d3_behavior_zoomWheel;
   d3.color = d3_color;
   function d3_color() {}
   d3_color.prototype.toString = function() {
@@ -2515,7 +2553,9 @@ module.exports = Tween;
         }
       }
     }
-    if (color = d3_rgb_names.get(format)) return rgb(color.r, color.g, color.b);
+    if (color = d3_rgb_names.get(format.toLowerCase())) {
+      return rgb(color.r, color.g, color.b);
+    }
     if (format != null && format.charAt(0) === "#" && !isNaN(color = parseInt(format.slice(1), 16))) {
       if (format.length === 4) {
         r = (color & 3840) >> 4;
@@ -2678,6 +2718,7 @@ module.exports = Tween;
     plum: 14524637,
     powderblue: 11591910,
     purple: 8388736,
+    rebeccapurple: 6697881,
     red: 16711680,
     rosybrown: 12357519,
     royalblue: 4286945,
@@ -2716,9 +2757,6 @@ module.exports = Tween;
     };
   }
   d3.functor = d3_functor;
-  function d3_identity(d) {
-    return d;
-  }
   d3.xhr = d3_xhrType(d3_identity);
   function d3_xhrType(response) {
     return function(url, mimeType, callback) {
@@ -2729,7 +2767,7 @@ module.exports = Tween;
   }
   function d3_xhr(url, mimeType, response, callback) {
     var xhr = {}, dispatch = d3.dispatch("beforesend", "progress", "load", "error"), headers = {}, request = new XMLHttpRequest(), responseType = null;
-    if (d3_window.XDomainRequest && !("withCredentials" in request) && /^(http(s)?:)?\/\//.test(url)) request = new XDomainRequest();
+    if (this.XDomainRequest && !("withCredentials" in request) && /^(http(s)?:)?\/\//.test(url)) request = new XDomainRequest();
     "onload" in request ? request.onload = request.onerror = respond : request.onreadystatechange = function() {
       request.readyState > 3 && respond();
     };
@@ -2915,7 +2953,7 @@ module.exports = Tween;
   };
   d3.csv = d3.dsv(",", "text/csv");
   d3.tsv = d3.dsv("	", "text/tab-separated-values");
-  var d3_timer_queueHead, d3_timer_queueTail, d3_timer_interval, d3_timer_timeout, d3_timer_active, d3_timer_frame = d3_window[d3_vendorSymbol(d3_window, "requestAnimationFrame")] || function(callback) {
+  var d3_timer_queueHead, d3_timer_queueTail, d3_timer_interval, d3_timer_timeout, d3_timer_active, d3_timer_frame = this[d3_vendorSymbol(this, "requestAnimationFrame")] || function(callback) {
     setTimeout(callback, 17);
   };
   d3.timer = function(callback, delay, then) {
@@ -6476,7 +6514,7 @@ module.exports = Tween;
     (function find(node, x1, y1, x2, y2) {
       if (x1 > x3 || y1 > y3 || x2 < x0 || y2 < y0) return;
       if (point = node.point) {
-        var point, dx = x - point[0], dy = y - point[1], distance2 = dx * dx + dy * dy;
+        var point, dx = x - node.x, dy = y - node.y, distance2 = dx * dx + dy * dy;
         if (distance2 < minDistance2) {
           var distance = Math.sqrt(minDistance2 = distance2);
           x0 = x - distance, y0 = y - distance;
@@ -7190,8 +7228,8 @@ module.exports = Tween;
             neighbors[o.target.index].push(o.source);
           }
         }
-        var candidates = neighbors[i], j = -1, m = candidates.length, x;
-        while (++j < m) if (!isNaN(x = candidates[j][dimension])) return x;
+        var candidates = neighbors[i], j = -1, l = candidates.length, x;
+        while (++j < l) if (!isNaN(x = candidates[j][dimension])) return x;
         return Math.random() * size;
       }
       return force.resume();
@@ -9431,7 +9469,7 @@ module.exports = Tween;
   d3_transitionPrototype.node = d3_selectionPrototype.node;
   d3_transitionPrototype.size = d3_selectionPrototype.size;
   d3.transition = function(selection, name) {
-    return selection && selection.transition ? d3_transitionInheritId ? selection.transition(name) : selection : d3_selectionRoot.transition(selection);
+    return selection && selection.transition ? d3_transitionInheritId ? selection.transition(name) : selection : d3.selection().transition(selection);
   };
   d3.transition.prototype = d3_transitionPrototype;
   d3_transitionPrototype.select = function(selector) {
@@ -9560,7 +9598,7 @@ module.exports = Tween;
     }
     function styleString(b) {
       return b == null ? styleNull : (b += "", function() {
-        var a = d3_window.getComputedStyle(this, null).getPropertyValue(name), i;
+        var a = d3_window(this).getComputedStyle(this, null).getPropertyValue(name), i;
         return a !== b && (i = d3_interpolate(a, b), function(t) {
           this.style.setProperty(name, i(t), priority);
         });
@@ -9571,7 +9609,7 @@ module.exports = Tween;
   d3_transitionPrototype.styleTween = function(name, tween, priority) {
     if (arguments.length < 3) priority = "";
     function styleTween(d, i) {
-      var f = tween.call(this, d, i, d3_window.getComputedStyle(this, null).getPropertyValue(name));
+      var f = tween.call(this, d, i, d3_window(this).getComputedStyle(this, null).getPropertyValue(name));
       return f && function(t) {
         this.style.setProperty(name, f(t), priority);
       };
@@ -9937,8 +9975,8 @@ module.exports = Tween;
       g.selectAll(".extent,.e>rect,.w>rect").attr("height", yExtent[1] - yExtent[0]);
     }
     function brushstart() {
-      var target = this, eventTarget = d3.select(d3.event.target), event_ = event.of(target, arguments), g = d3.select(target), resizing = eventTarget.datum(), resizingX = !/^(n|s)$/.test(resizing) && x, resizingY = !/^(e|w)$/.test(resizing) && y, dragging = eventTarget.classed("extent"), dragRestore = d3_event_dragSuppress(), center, origin = d3.mouse(target), offset;
-      var w = d3.select(d3_window).on("keydown.brush", keydown).on("keyup.brush", keyup);
+      var target = this, eventTarget = d3.select(d3.event.target), event_ = event.of(target, arguments), g = d3.select(target), resizing = eventTarget.datum(), resizingX = !/^(n|s)$/.test(resizing) && x, resizingY = !/^(e|w)$/.test(resizing) && y, dragging = eventTarget.classed("extent"), dragRestore = d3_event_dragSuppress(target), center, origin = d3.mouse(target), offset;
+      var w = d3.select(d3_window(target)).on("keydown.brush", keydown).on("keyup.brush", keyup);
       if (d3.event.changedTouches) {
         w.on("touchmove.brush", brushmove).on("touchend.brush", brushend);
       } else {
@@ -10303,156 +10341,247 @@ module.exports = Tween;
   this.d3 = d3;
 }();
 },{}],6:[function(require,module,exports){
-'use strict';
+(function() {
+  var penner, umd;
 
-module.exports = {
-	linear: function linear(time, begin, change, duration) {
-		return change * time / duration + begin;
-	},
-	easeInQuad: function easeInQuad(time, begin, change, duration) {
-		return change * (time /= duration) * time + begin;
-	},
-	easeOutQuad: function easeOutQuad(time, begin, change, duration) {
-		return -change * (time /= duration) * (time - 2) + begin;
-	},
-	easeInOutQuad: function easeInOutQuad(time, begin, change, duration) {
-		if ((time /= duration / 2) < 1) return change / 2 * time * time + begin;
-		return -change / 2 * ((--time) * (time - 2) - 1) + begin;
-	},
-	easeInCubic: function easeInCubic(time, begin, change, duration) {
-		return change * (time /= duration) * time * time + begin;
-	},
-	easeOutCubic: function easeOutCubic(time, begin, change, duration) {
-		return change * ((time = time / duration - 1) * time * time + 1) + begin;
-	},
-	easeInOutCubic: function easeInOutCubic(time, begin, change, duration) {
-		if ((time /= duration / 2) < 1) return change / 2 * time * time * time + begin;
-		return change / 2 * ((time -= 2) * time * time + 2) + begin;
-	},
-	easeInQuart: function easeInQuart(time, begin, change, duration) {
-		return change * (time /= duration) * time * time * time + begin;
-	},
-	easeOutQuart: function easeOutQuart(time, begin, change, duration) {
-		return -change * ((time = time / duration - 1) * time * time * time - 1) + begin;
-	},
-	easeInOutQuart: function easeInOutQuart(time, begin, change, duration) {
-		if ((time /= duration / 2) < 1) return change / 2 * time * time * time * time + begin;
-		return -change / 2 * ((time -= 2) * time * time * time - 2) + begin;
-	},
-	easeInQuint: function easeInQuint(time, begin, change, duration) {
-		return change * (time /= duration) * time * time * time * time + begin;
-	},
-	easeOutQuint: function easeOutQuint(time, begin, change, duration) {
-		return change * ((time = time / duration - 1) * time * time * time * time + 1) + begin;
-	},
-	easeInOutQuint: function easeInOutQuint(time, begin, change, duration) {
-		if ((time /= duration / 2) < 1) return change / 2 * time * time * time * time * time + begin;
-		return change / 2 * ((time -= 2) * time * time * time * time + 2) + begin;
-	},
-	easeInSine: function easeInSine(time, begin, change, duration) {
-		return -change * Math.cos(time / duration * (Math.PI / 2)) + change + begin;
-	},
-	easeOutSine: function easeOutSine(time, begin, change, duration) {
-		return change * Math.sin(time / duration * (Math.PI / 2)) + begin;
-	},
-	easeInOutSine: function easeInOutSine(time, begin, change, duration) {
-		return -change / 2 * (Math.cos(Math.PI * time / duration) - 1) + begin;
-	},
-	easeInExpo: function easeInExpo(time, begin, change, duration) {
-		return (time == 0) ? begin : change * Math.pow(2, 10 * (time / duration - 1)) + begin;
-	},
-	easeOutExpo: function easeOutExpo(time, begin, change, duration) {
-		return (time == duration) ? begin + change : change * (-Math.pow(2, -10 * time / duration) + 1) + begin;
-	},
-	easeInOutExpo: function easeInOutExpo(time, begin, change, duration) {
-		if (time == 0) return begin;
-		if (time == duration) return begin + change;
-		if ((time /= duration / 2) < 1) return change / 2 * Math.pow(2, 10 * (time - 1)) + begin;
-		return change / 2 * (-Math.pow(2, -10 * --time) + 2) + begin;
-	},
-	easeInCirc: function easeInCirc(time, begin, change, duration) {
-		return -change * (Math.sqrt(1 - (time /= duration) * time) - 1) + begin;
-	},
-	easeOutCirc: function easeOutCirc(time, begin, change, duration) {
-		return change * Math.sqrt(1 - (time = time / duration - 1) * time) + begin;
-	},
-	easeInOutCirc: function easeInOutCirc(time, begin, change, duration) {
-		if ((time /= duration / 2) < 1) return -change / 2 * (Math.sqrt(1 - time * time) - 1) + begin;
-		return change / 2 * (Math.sqrt(1 - (time -= 2) * time) + 1) + begin;
-	},
-	easeInElastic: function easeInElastic(time, begin, change, duration) {
-		var shootover = 1.70158;
-		var period = 0;
-		var amplitude = change;
-		if (time == 0) return begin;
-		if ((time /= duration) == 1) return begin + change;
-		if (!period) period = duration * .3;
-		if (amplitude < Math.abs(change)) {
-			amplitude = change;
-			var shootover = period / 4;
-		}
-		else var shootover = period / (2 * Math.PI) * Math.asin(change / amplitude);
-		return -(amplitude * Math.pow(2, 10 * (time -= 1)) * Math.sin((time * duration - shootover) * (2 * Math.PI) / period)) + begin;
-	},
-	easeOutElastic: function easeOutElastic(time, begin, change, duration) {
-		var shootover = 1.70158;
-		var period = 0;
-		var amplitude = change;
-		if (time == 0) return begin;
-		if ((time /= duration) == 1) return begin + change;
-		if (!period) period = duration * .3;
-		if (amplitude < Math.abs(change)) {
-			amplitude = change;
-			var shootover = period / 4;
-		}
-		else var shootover = period / (2 * Math.PI) * Math.asin(change / amplitude);
-		return amplitude * Math.pow(2, -10 * time) * Math.sin((time * duration - shootover) * (2 * Math.PI) / period) + change + begin;
-	},
-	easeInOutElastic: function easeInOutElastic(time, begin, change, duration) {
-		var shootover = 1.70158;
-		var period = 0;
-		var amplitude = change;
-		if (time == 0) return begin;
-		if ((time /= duration / 2) == 2) return begin + change;
-		if (!period) period = duration * (.3 * 1.5);
-		if (amplitude < Math.abs(change)) {
-			amplitude = change;
-			var shootover = period / 4;
-		}
-		else var shootover = period / (2 * Math.PI) * Math.asin(change / amplitude);
-		if (time < 1) return -.5 * (amplitude * Math.pow(2, 10 * (time -= 1)) * Math.sin((time * duration - shootover) * (2 * Math.PI) / period)) + begin;
-		return amplitude * Math.pow(2, -10 * (time -= 1)) * Math.sin((time * duration - shootover) * (2 * Math.PI) / period) * .5 + change + begin;
-	},
-	easeInBack: function easeInBack(time, begin, change, duration, shootover) {
-		if (shootover == undefined) shootover = 1.70158;
-		return change * (time /= duration) * time * ((shootover + 1) * time - shootover) + begin;
-	},
-	easeOutBack: function easeOutBack(time, begin, change, duration, shootover) {
-		if (shootover == undefined) shootover = 1.70158;
-		return change * ((time = time / duration - 1) * time * ((shootover + 1) * time + shootover) + 1) + begin;
-	},
-	easeInOutBack: function easeInOutBack(time, begin, change, duration, shootover) {
-		if (shootover == undefined) shootover = 1.70158;
-		if ((time /= duration / 2) < 1) return change / 2 * (time * time * (((shootover *= (1.525)) + 1) * time - shootover)) + begin;
-		return change / 2 * ((time -= 2) * time * (((shootover *= (1.525)) + 1) * time + shootover) + 2) + begin;
-	},
-	easeOutBounce: function easeOutBounce(time, begin, change, duration) {
-		if ((time /= duration) < (1 / 2.75)) {
-			return change * (7.5625 * time * time) + begin;
-		} else if (time < (2 / 2.75)) {
-			return change * (7.5625 * (time -= (1.5 / 2.75)) * time + .75) + begin;
-		} else if (time < (2.5 / 2.75)) {
-			return change * (7.5625 * (time -= (2.25 / 2.75)) * time + .9375) + begin;
-		} else {
-			return change * (7.5625 * (time -= (2.625 / 2.75)) * time + .984375) + begin;
-		}
-	}
-};
+  umd = function(factory) {
+    if (typeof exports === 'object') {
+      return module.exports = factory;
+    } else if (typeof define === 'function' && define.amd) {
+      return define([], factory);
+    } else {
+      return this.penner = factory;
+    }
+  };
+
+  penner = {
+    linear: function(t, b, c, d) {
+      return c * t / d + b;
+    },
+    easeInQuad: function(t, b, c, d) {
+      return c * (t /= d) * t + b;
+    },
+    easeOutQuad: function(t, b, c, d) {
+      return -c * (t /= d) * (t - 2) + b;
+    },
+    easeInOutQuad: function(t, b, c, d) {
+      if ((t /= d / 2) < 1) {
+        return c / 2 * t * t + b;
+      } else {
+        return -c / 2 * ((--t) * (t - 2) - 1) + b;
+      }
+    },
+    easeInCubic: function(t, b, c, d) {
+      return c * (t /= d) * t * t + b;
+    },
+    easeOutCubic: function(t, b, c, d) {
+      return c * ((t = t / d - 1) * t * t + 1) + b;
+    },
+    easeInOutCubic: function(t, b, c, d) {
+      if ((t /= d / 2) < 1) {
+        return c / 2 * t * t * t + b;
+      } else {
+        return c / 2 * ((t -= 2) * t * t + 2) + b;
+      }
+    },
+    easeInQuart: function(t, b, c, d) {
+      return c * (t /= d) * t * t * t + b;
+    },
+    easeOutQuart: function(t, b, c, d) {
+      return -c * ((t = t / d - 1) * t * t * t - 1) + b;
+    },
+    easeInOutQuart: function(t, b, c, d) {
+      if ((t /= d / 2) < 1) {
+        return c / 2 * t * t * t * t + b;
+      } else {
+        return -c / 2 * ((t -= 2) * t * t * t - 2) + b;
+      }
+    },
+    easeInQuint: function(t, b, c, d) {
+      return c * (t /= d) * t * t * t * t + b;
+    },
+    easeOutQuint: function(t, b, c, d) {
+      return c * ((t = t / d - 1) * t * t * t * t + 1) + b;
+    },
+    easeInOutQuint: function(t, b, c, d) {
+      if ((t /= d / 2) < 1) {
+        return c / 2 * t * t * t * t * t + b;
+      } else {
+        return c / 2 * ((t -= 2) * t * t * t * t + 2) + b;
+      }
+    },
+    easeInSine: function(t, b, c, d) {
+      return -c * Math.cos(t / d * (Math.PI / 2)) + c + b;
+    },
+    easeOutSine: function(t, b, c, d) {
+      return c * Math.sin(t / d * (Math.PI / 2)) + b;
+    },
+    easeInOutSine: function(t, b, c, d) {
+      return -c / 2 * (Math.cos(Math.PI * t / d) - 1) + b;
+    },
+    easeInExpo: function(t, b, c, d) {
+      var _ref;
+      return (_ref = t === 0) != null ? _ref : {
+        b: c * Math.pow(2, 10 * (t / d - 1)) + b
+      };
+    },
+    easeOutExpo: function(t, b, c, d) {
+      var _ref;
+      return (_ref = t === d) != null ? _ref : b + {
+        c: c * (-Math.pow(2, -10 * t / d) + 1) + b
+      };
+    },
+    easeInOutExpo: function(t, b, c, d) {
+      if (t === 0) {
+        b;
+      }
+      if (t === d) {
+        b + c;
+      }
+      if ((t /= d / 2) < 1) {
+        return c / 2 * Math.pow(2, 10 * (t - 1)) + b;
+      } else {
+        return c / 2 * (-Math.pow(2, -10 * --t) + 2) + b;
+      }
+    },
+    easeInCirc: function(t, b, c, d) {
+      return -c * (Math.sqrt(1 - (t /= d) * t) - 1) + b;
+    },
+    easeOutCirc: function(t, b, c, d) {
+      return c * Math.sqrt(1 - (t = t / d - 1) * t) + b;
+    },
+    easeInOutCirc: function(t, b, c, d) {
+      if ((t /= d / 2) < 1) {
+        return -c / 2 * (Math.sqrt(1 - t * t) - 1) + b;
+      } else {
+        return c / 2 * (Math.sqrt(1 - (t -= 2) * t) + 1) + b;
+      }
+    },
+    easeInElastic: function(t, b, c, d) {
+      var a, p, s;
+      s = 1.70158;
+      p = 0;
+      a = c;
+      if (t === 0) {
+        b;
+      } else if ((t /= d) === 1) {
+        b + c;
+      }
+      if (!p) {
+        p = d * .3;
+      }
+      if (a < Math.abs(c)) {
+        a = c;
+        s = p / 4;
+      } else {
+        s = p / (2 * Math.PI) * Math.asin(c / a);
+      }
+      return -(a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t * d - s) * (2 * Math.PI) / p)) + b;
+    },
+    easeOutElastic: function(t, b, c, d) {
+      var a, p, s;
+      s = 1.70158;
+      p = 0;
+      a = c;
+      if (t === 0) {
+        b;
+      } else if ((t /= d) === 1) {
+        b + c;
+      }
+      if (!p) {
+        p = d * .3;
+      }
+      if (a < Math.abs(c)) {
+        a = c;
+        s = p / 4;
+      } else {
+        s = p / (2 * Math.PI) * Math.asin(c / a);
+      }
+      return a * Math.pow(2, -10 * t) * Math.sin((t * d - s) * (2 * Math.PI) / p) + c + b;
+    },
+    easeInOutElastic: function(t, b, c, d) {
+      var a, p, s;
+      s = 1.70158;
+      p = 0;
+      a = c;
+      if (t === 0) {
+        b;
+      } else if ((t /= d / 2) === 2) {
+        b + c;
+      }
+      if (!p) {
+        p = d * (.3 * 1.5);
+      }
+      if (a < Math.abs(c)) {
+        a = c;
+        s = p / 4;
+      } else {
+        s = p / (2 * Math.PI) * Math.asin(c / a);
+      }
+      if (t < 1) {
+        return -.5 * (a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t * d - s) * (2 * Math.PI) / p)) + b;
+      } else {
+        return a * Math.pow(2, -10 * (t -= 1)) * Math.sin((t * d - s) * (2 * Math.PI) / p) * .5 + c + b;
+      }
+    },
+    easeInBack: function(t, b, c, d, s) {
+      if (s === void 0) {
+        s = 1.70158;
+      }
+      return c * (t /= d) * t * ((s + 1) * t - s) + b;
+    },
+    easeOutBack: function(t, b, c, d, s) {
+      if (s === void 0) {
+        s = 1.70158;
+      }
+      return c * ((t = t / d - 1) * t * ((s + 1) * t + s) + 1) + b;
+    },
+    easeInOutBack: function(t, b, c, d, s) {
+      if (s === void 0) {
+        s = 1.70158;
+      }
+      if ((t /= d / 2) < 1) {
+        return c / 2 * (t * t * (((s *= 1.525) + 1) * t - s)) + b;
+      } else {
+        return c / 2 * ((t -= 2) * t * (((s *= 1.525) + 1) * t + s) + 2) + b;
+      }
+    },
+    easeInBounce: function(t, b, c, d) {
+      var v;
+      v = penner.easeOutBounce(d - t, 0, c, d);
+      return c - v + b;
+    },
+    easeOutBounce: function(t, b, c, d) {
+      if ((t /= d) < 1 / 2.75) {
+        return c * (7.5625 * t * t) + b;
+      } else if (t < 2 / 2.75) {
+        return c * (7.5625 * (t -= 1.5 / 2.75) * t + .75) + b;
+      } else if (t < 2.5 / 2.75) {
+        return c * (7.5625 * (t -= 2.25 / 2.75) * t + .9375) + b;
+      } else {
+        return c * (7.5625 * (t -= 2.625 / 2.75) * t + .984375) + b;
+      }
+    },
+    easeInOutBounce: function(t, b, c, d) {
+      var v;
+      if (t < d / 2) {
+        v = penner.easeInBounce(t * 2, 0, c, d);
+        return v * .5 + b;
+      } else {
+        v = penner.easeOutBounce(t * 2 - d, 0, c, d);
+        return v * .5 + c * .5 + b;
+      }
+    }
+  };
+
+  umd(penner);
+
+}).call(this);
 
 },{}],7:[function(require,module,exports){
-//     Underscore.js 1.7.0
+//     Underscore.js 1.8.3
 //     http://underscorejs.org
-//     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+//     (c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
 //     Underscore may be freely distributed under the MIT license.
 
 (function() {
@@ -10473,7 +10602,6 @@ module.exports = {
   var
     push             = ArrayProto.push,
     slice            = ArrayProto.slice,
-    concat           = ArrayProto.concat,
     toString         = ObjProto.toString,
     hasOwnProperty   = ObjProto.hasOwnProperty;
 
@@ -10482,7 +10610,11 @@ module.exports = {
   var
     nativeIsArray      = Array.isArray,
     nativeKeys         = Object.keys,
-    nativeBind         = FuncProto.bind;
+    nativeBind         = FuncProto.bind,
+    nativeCreate       = Object.create;
+
+  // Naked function reference for surrogate-prototype-swapping.
+  var Ctor = function(){};
 
   // Create a safe reference to the Underscore object for use below.
   var _ = function(obj) {
@@ -10504,12 +10636,12 @@ module.exports = {
   }
 
   // Current version.
-  _.VERSION = '1.7.0';
+  _.VERSION = '1.8.3';
 
   // Internal function that returns an efficient (for current engines) version
   // of the passed-in callback, to be repeatedly applied in other Underscore
   // functions.
-  var createCallback = function(func, context, argCount) {
+  var optimizeCb = function(func, context, argCount) {
     if (context === void 0) return func;
     switch (argCount == null ? 3 : argCount) {
       case 1: return function(value) {
@@ -10533,11 +10665,59 @@ module.exports = {
   // A mostly-internal function to generate callbacks that can be applied
   // to each element in a collection, returning the desired result — either
   // identity, an arbitrary callback, a property matcher, or a property accessor.
-  _.iteratee = function(value, context, argCount) {
+  var cb = function(value, context, argCount) {
     if (value == null) return _.identity;
-    if (_.isFunction(value)) return createCallback(value, context, argCount);
-    if (_.isObject(value)) return _.matches(value);
+    if (_.isFunction(value)) return optimizeCb(value, context, argCount);
+    if (_.isObject(value)) return _.matcher(value);
     return _.property(value);
+  };
+  _.iteratee = function(value, context) {
+    return cb(value, context, Infinity);
+  };
+
+  // An internal function for creating assigner functions.
+  var createAssigner = function(keysFunc, undefinedOnly) {
+    return function(obj) {
+      var length = arguments.length;
+      if (length < 2 || obj == null) return obj;
+      for (var index = 1; index < length; index++) {
+        var source = arguments[index],
+            keys = keysFunc(source),
+            l = keys.length;
+        for (var i = 0; i < l; i++) {
+          var key = keys[i];
+          if (!undefinedOnly || obj[key] === void 0) obj[key] = source[key];
+        }
+      }
+      return obj;
+    };
+  };
+
+  // An internal function for creating a new object that inherits from another.
+  var baseCreate = function(prototype) {
+    if (!_.isObject(prototype)) return {};
+    if (nativeCreate) return nativeCreate(prototype);
+    Ctor.prototype = prototype;
+    var result = new Ctor;
+    Ctor.prototype = null;
+    return result;
+  };
+
+  var property = function(key) {
+    return function(obj) {
+      return obj == null ? void 0 : obj[key];
+    };
+  };
+
+  // Helper for collection methods to determine whether a collection
+  // should be iterated as an array or as an object
+  // Related: http://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength
+  // Avoids a very nasty iOS 8 JIT bug on ARM-64. #2094
+  var MAX_ARRAY_INDEX = Math.pow(2, 53) - 1;
+  var getLength = property('length');
+  var isArrayLike = function(collection) {
+    var length = getLength(collection);
+    return typeof length == 'number' && length >= 0 && length <= MAX_ARRAY_INDEX;
   };
 
   // Collection Functions
@@ -10547,11 +10727,10 @@ module.exports = {
   // Handles raw objects in addition to array-likes. Treats all
   // sparse array-likes as if they were dense.
   _.each = _.forEach = function(obj, iteratee, context) {
-    if (obj == null) return obj;
-    iteratee = createCallback(iteratee, context);
-    var i, length = obj.length;
-    if (length === +length) {
-      for (i = 0; i < length; i++) {
+    iteratee = optimizeCb(iteratee, context);
+    var i, length;
+    if (isArrayLike(obj)) {
+      for (i = 0, length = obj.length; i < length; i++) {
         iteratee(obj[i], i, obj);
       }
     } else {
@@ -10565,77 +10744,66 @@ module.exports = {
 
   // Return the results of applying the iteratee to each element.
   _.map = _.collect = function(obj, iteratee, context) {
-    if (obj == null) return [];
-    iteratee = _.iteratee(iteratee, context);
-    var keys = obj.length !== +obj.length && _.keys(obj),
+    iteratee = cb(iteratee, context);
+    var keys = !isArrayLike(obj) && _.keys(obj),
         length = (keys || obj).length,
-        results = Array(length),
-        currentKey;
+        results = Array(length);
     for (var index = 0; index < length; index++) {
-      currentKey = keys ? keys[index] : index;
+      var currentKey = keys ? keys[index] : index;
       results[index] = iteratee(obj[currentKey], currentKey, obj);
     }
     return results;
   };
 
-  var reduceError = 'Reduce of empty array with no initial value';
+  // Create a reducing function iterating left or right.
+  function createReduce(dir) {
+    // Optimized iterator function as using arguments.length
+    // in the main function will deoptimize the, see #1991.
+    function iterator(obj, iteratee, memo, keys, index, length) {
+      for (; index >= 0 && index < length; index += dir) {
+        var currentKey = keys ? keys[index] : index;
+        memo = iteratee(memo, obj[currentKey], currentKey, obj);
+      }
+      return memo;
+    }
+
+    return function(obj, iteratee, memo, context) {
+      iteratee = optimizeCb(iteratee, context, 4);
+      var keys = !isArrayLike(obj) && _.keys(obj),
+          length = (keys || obj).length,
+          index = dir > 0 ? 0 : length - 1;
+      // Determine the initial value if none is provided.
+      if (arguments.length < 3) {
+        memo = obj[keys ? keys[index] : index];
+        index += dir;
+      }
+      return iterator(obj, iteratee, memo, keys, index, length);
+    };
+  }
 
   // **Reduce** builds up a single result from a list of values, aka `inject`,
   // or `foldl`.
-  _.reduce = _.foldl = _.inject = function(obj, iteratee, memo, context) {
-    if (obj == null) obj = [];
-    iteratee = createCallback(iteratee, context, 4);
-    var keys = obj.length !== +obj.length && _.keys(obj),
-        length = (keys || obj).length,
-        index = 0, currentKey;
-    if (arguments.length < 3) {
-      if (!length) throw new TypeError(reduceError);
-      memo = obj[keys ? keys[index++] : index++];
-    }
-    for (; index < length; index++) {
-      currentKey = keys ? keys[index] : index;
-      memo = iteratee(memo, obj[currentKey], currentKey, obj);
-    }
-    return memo;
-  };
+  _.reduce = _.foldl = _.inject = createReduce(1);
 
   // The right-associative version of reduce, also known as `foldr`.
-  _.reduceRight = _.foldr = function(obj, iteratee, memo, context) {
-    if (obj == null) obj = [];
-    iteratee = createCallback(iteratee, context, 4);
-    var keys = obj.length !== + obj.length && _.keys(obj),
-        index = (keys || obj).length,
-        currentKey;
-    if (arguments.length < 3) {
-      if (!index) throw new TypeError(reduceError);
-      memo = obj[keys ? keys[--index] : --index];
-    }
-    while (index--) {
-      currentKey = keys ? keys[index] : index;
-      memo = iteratee(memo, obj[currentKey], currentKey, obj);
-    }
-    return memo;
-  };
+  _.reduceRight = _.foldr = createReduce(-1);
 
   // Return the first value which passes a truth test. Aliased as `detect`.
   _.find = _.detect = function(obj, predicate, context) {
-    var result;
-    predicate = _.iteratee(predicate, context);
-    _.some(obj, function(value, index, list) {
-      if (predicate(value, index, list)) {
-        result = value;
-        return true;
-      }
-    });
-    return result;
+    var key;
+    if (isArrayLike(obj)) {
+      key = _.findIndex(obj, predicate, context);
+    } else {
+      key = _.findKey(obj, predicate, context);
+    }
+    if (key !== void 0 && key !== -1) return obj[key];
   };
 
   // Return all the elements that pass a truth test.
   // Aliased as `select`.
   _.filter = _.select = function(obj, predicate, context) {
     var results = [];
-    if (obj == null) return results;
-    predicate = _.iteratee(predicate, context);
+    predicate = cb(predicate, context);
     _.each(obj, function(value, index, list) {
       if (predicate(value, index, list)) results.push(value);
     });
@@ -10644,19 +10812,17 @@ module.exports = {
 
   // Return all the elements for which a truth test fails.
   _.reject = function(obj, predicate, context) {
-    return _.filter(obj, _.negate(_.iteratee(predicate)), context);
+    return _.filter(obj, _.negate(cb(predicate)), context);
   };
 
   // Determine whether all of the elements match a truth test.
   // Aliased as `all`.
   _.every = _.all = function(obj, predicate, context) {
-    if (obj == null) return true;
-    predicate = _.iteratee(predicate, context);
-    var keys = obj.length !== +obj.length && _.keys(obj),
-        length = (keys || obj).length,
-        index, currentKey;
-    for (index = 0; index < length; index++) {
-      currentKey = keys ? keys[index] : index;
+    predicate = cb(predicate, context);
+    var keys = !isArrayLike(obj) && _.keys(obj),
+        length = (keys || obj).length;
+    for (var index = 0; index < length; index++) {
+      var currentKey = keys ? keys[index] : index;
       if (!predicate(obj[currentKey], currentKey, obj)) return false;
     }
     return true;
@@ -10665,24 +10831,22 @@ module.exports = {
   // Determine if at least one element in the object matches a truth test.
   // Aliased as `any`.
   _.some = _.any = function(obj, predicate, context) {
-    if (obj == null) return false;
-    predicate = _.iteratee(predicate, context);
-    var keys = obj.length !== +obj.length && _.keys(obj),
-        length = (keys || obj).length,
-        index, currentKey;
-    for (index = 0; index < length; index++) {
-      currentKey = keys ? keys[index] : index;
+    predicate = cb(predicate, context);
+    var keys = !isArrayLike(obj) && _.keys(obj),
+        length = (keys || obj).length;
+    for (var index = 0; index < length; index++) {
+      var currentKey = keys ? keys[index] : index;
       if (predicate(obj[currentKey], currentKey, obj)) return true;
     }
     return false;
   };
 
-  // Determine if the array or object contains a given value (using `===`).
-  // Aliased as `include`.
-  _.contains = _.include = function(obj, target) {
-    if (obj == null) return false;
-    if (obj.length !== +obj.length) obj = _.values(obj);
-    return _.indexOf(obj, target) >= 0;
+  // Determine if the array or object contains a given item (using `===`).
+  // Aliased as `includes` and `include`.
+  _.contains = _.includes = _.include = function(obj, item, fromIndex, guard) {
+    if (!isArrayLike(obj)) obj = _.values(obj);
+    if (typeof fromIndex != 'number' || guard) fromIndex = 0;
+    return _.indexOf(obj, item, fromIndex) >= 0;
   };
 
   // Invoke a method (with arguments) on every item in a collection.
@@ -10690,7 +10854,8 @@ module.exports = {
     var args = slice.call(arguments, 2);
     var isFunc = _.isFunction(method);
     return _.map(obj, function(value) {
-      return (isFunc ? method : value[method]).apply(value, args);
+      var func = isFunc ? method : value[method];
+      return func == null ? func : func.apply(value, args);
     });
   };
 
@@ -10702,13 +10867,13 @@ module.exports = {
   // Convenience version of a common use case of `filter`: selecting only objects
   // containing specific `key:value` pairs.
   _.where = function(obj, attrs) {
-    return _.filter(obj, _.matches(attrs));
+    return _.filter(obj, _.matcher(attrs));
   };
 
   // Convenience version of a common use case of `find`: getting the first object
   // containing specific `key:value` pairs.
   _.findWhere = function(obj, attrs) {
-    return _.find(obj, _.matches(attrs));
+    return _.find(obj, _.matcher(attrs));
   };
 
   // Return the maximum element (or element-based computation).
@@ -10716,7 +10881,7 @@ module.exports = {
     var result = -Infinity, lastComputed = -Infinity,
         value, computed;
     if (iteratee == null && obj != null) {
-      obj = obj.length === +obj.length ? obj : _.values(obj);
+      obj = isArrayLike(obj) ? obj : _.values(obj);
       for (var i = 0, length = obj.length; i < length; i++) {
         value = obj[i];
         if (value > result) {
@@ -10724,7 +10889,7 @@ module.exports = {
         }
       }
     } else {
-      iteratee = _.iteratee(iteratee, context);
+      iteratee = cb(iteratee, context);
       _.each(obj, function(value, index, list) {
         computed = iteratee(value, index, list);
         if (computed > lastComputed || computed === -Infinity && result === -Infinity) {
@@ -10741,7 +10906,7 @@ module.exports = {
     var result = Infinity, lastComputed = Infinity,
         value, computed;
     if (iteratee == null && obj != null) {
-      obj = obj.length === +obj.length ? obj : _.values(obj);
+      obj = isArrayLike(obj) ? obj : _.values(obj);
       for (var i = 0, length = obj.length; i < length; i++) {
         value = obj[i];
         if (value < result) {
@@ -10749,7 +10914,7 @@ module.exports = {
         }
       }
     } else {
-      iteratee = _.iteratee(iteratee, context);
+      iteratee = cb(iteratee, context);
       _.each(obj, function(value, index, list) {
         computed = iteratee(value, index, list);
         if (computed < lastComputed || computed === Infinity && result === Infinity) {
@@ -10764,7 +10929,7 @@ module.exports = {
   // Shuffle a collection, using the modern version of the
   // [Fisher-Yates shuffle](http://en.wikipedia.org/wiki/Fisher–Yates_shuffle).
   _.shuffle = function(obj) {
-    var set = obj && obj.length === +obj.length ? obj : _.values(obj);
+    var set = isArrayLike(obj) ? obj : _.values(obj);
     var length = set.length;
     var shuffled = Array(length);
     for (var index = 0, rand; index < length; index++) {
@@ -10780,7 +10945,7 @@ module.exports = {
   // The internal `guard` argument allows it to work with `map`.
   _.sample = function(obj, n, guard) {
     if (n == null || guard) {
-      if (obj.length !== +obj.length) obj = _.values(obj);
+      if (!isArrayLike(obj)) obj = _.values(obj);
       return obj[_.random(obj.length - 1)];
     }
     return _.shuffle(obj).slice(0, Math.max(0, n));
@@ -10788,7 +10953,7 @@ module.exports = {
 
   // Sort the object's values by a criterion produced by an iteratee.
   _.sortBy = function(obj, iteratee, context) {
-    iteratee = _.iteratee(iteratee, context);
+    iteratee = cb(iteratee, context);
     return _.pluck(_.map(obj, function(value, index, list) {
       return {
         value: value,
@@ -10810,7 +10975,7 @@ module.exports = {
   var group = function(behavior) {
     return function(obj, iteratee, context) {
       var result = {};
-      iteratee = _.iteratee(iteratee, context);
+      iteratee = cb(iteratee, context);
       _.each(obj, function(value, index) {
         var key = iteratee(value, index, obj);
         behavior(result, value, key);
@@ -10838,37 +11003,24 @@ module.exports = {
     if (_.has(result, key)) result[key]++; else result[key] = 1;
   });
 
-  // Use a comparator function to figure out the smallest index at which
-  // an object should be inserted so as to maintain order. Uses binary search.
-  _.sortedIndex = function(array, obj, iteratee, context) {
-    iteratee = _.iteratee(iteratee, context, 1);
-    var value = iteratee(obj);
-    var low = 0, high = array.length;
-    while (low < high) {
-      var mid = low + high >>> 1;
-      if (iteratee(array[mid]) < value) low = mid + 1; else high = mid;
-    }
-    return low;
-  };
-
   // Safely create a real, live array from anything iterable.
   _.toArray = function(obj) {
     if (!obj) return [];
     if (_.isArray(obj)) return slice.call(obj);
-    if (obj.length === +obj.length) return _.map(obj, _.identity);
+    if (isArrayLike(obj)) return _.map(obj, _.identity);
     return _.values(obj);
   };
 
   // Return the number of elements in an object.
   _.size = function(obj) {
     if (obj == null) return 0;
-    return obj.length === +obj.length ? obj.length : _.keys(obj).length;
+    return isArrayLike(obj) ? obj.length : _.keys(obj).length;
   };
 
   // Split a collection into two arrays: one whose elements all satisfy the given
   // predicate, and one whose elements all do not satisfy the predicate.
   _.partition = function(obj, predicate, context) {
-    predicate = _.iteratee(predicate, context);
+    predicate = cb(predicate, context);
     var pass = [], fail = [];
     _.each(obj, function(value, key, obj) {
       (predicate(value, key, obj) ? pass : fail).push(value);
@@ -10885,30 +11037,27 @@ module.exports = {
   _.first = _.head = _.take = function(array, n, guard) {
     if (array == null) return void 0;
     if (n == null || guard) return array[0];
-    if (n < 0) return [];
-    return slice.call(array, 0, n);
+    return _.initial(array, array.length - n);
   };
 
   // Returns everything but the last entry of the array. Especially useful on
   // the arguments object. Passing **n** will return all the values in
-  // the array, excluding the last N. The **guard** check allows it to work with
-  // `_.map`.
+  // the array, excluding the last N.
   _.initial = function(array, n, guard) {
     return slice.call(array, 0, Math.max(0, array.length - (n == null || guard ? 1 : n)));
   };
 
   // Get the last element of an array. Passing **n** will return the last N
-  // values in the array. The **guard** check allows it to work with `_.map`.
+  // values in the array.
   _.last = function(array, n, guard) {
     if (array == null) return void 0;
     if (n == null || guard) return array[array.length - 1];
-    return slice.call(array, Math.max(array.length - n, 0));
+    return _.rest(array, Math.max(0, array.length - n));
   };
 
   // Returns everything but the first entry of the array. Aliased as `tail` and `drop`.
   // Especially useful on the arguments object. Passing an **n** will return
-  // the rest N values in the array. The **guard**
-  // check allows it to work with `_.map`.
+  // the rest N values in the array.
   _.rest = _.tail = _.drop = function(array, n, guard) {
     return slice.call(array, n == null || guard ? 1 : n);
   };
@@ -10919,18 +11068,20 @@ module.exports = {
   };
 
   // Internal implementation of a recursive `flatten` function.
-  var flatten = function(input, shallow, strict, output) {
-    if (shallow && _.every(input, _.isArray)) {
-      return concat.apply(output, input);
-    }
-    for (var i = 0, length = input.length; i < length; i++) {
+  var flatten = function(input, shallow, strict, startIndex) {
+    var output = [], idx = 0;
+    for (var i = startIndex || 0, length = getLength(input); i < length; i++) {
       var value = input[i];
-      if (!_.isArray(value) && !_.isArguments(value)) {
-        if (!strict) output.push(value);
-      } else if (shallow) {
-        push.apply(output, value);
-      } else {
-        flatten(value, shallow, strict, output);
+      if (isArrayLike(value) && (_.isArray(value) || _.isArguments(value))) {
+        //flatten current level of array or arguments object
+        if (!shallow) value = flatten(value, shallow, strict);
+        var j = 0, len = value.length;
+        output.length += len;
+        while (j < len) {
+          output[idx++] = value[j++];
+        }
+      } else if (!strict) {
+        output[idx++] = value;
       }
     }
     return output;
@@ -10938,7 +11089,7 @@ module.exports = {
 
   // Flatten out an array, either recursively (by default), or just one level.
   _.flatten = function(array, shallow) {
-    return flatten(array, shallow, false, []);
+    return flatten(array, shallow, false);
   };
 
   // Return a version of the array that does not contain the specified value(s).
@@ -10950,27 +11101,26 @@ module.exports = {
   // been sorted, you have the option of using a faster algorithm.
   // Aliased as `unique`.
   _.uniq = _.unique = function(array, isSorted, iteratee, context) {
-    if (array == null) return [];
     if (!_.isBoolean(isSorted)) {
       context = iteratee;
       iteratee = isSorted;
       isSorted = false;
     }
-    if (iteratee != null) iteratee = _.iteratee(iteratee, context);
+    if (iteratee != null) iteratee = cb(iteratee, context);
     var result = [];
     var seen = [];
-    for (var i = 0, length = array.length; i < length; i++) {
-      var value = array[i];
+    for (var i = 0, length = getLength(array); i < length; i++) {
+      var value = array[i],
+          computed = iteratee ? iteratee(value, i, array) : value;
       if (isSorted) {
-        if (!i || seen !== value) result.push(value);
-        seen = value;
+        if (!i || seen !== computed) result.push(value);
+        seen = computed;
       } else if (iteratee) {
-        var computed = iteratee(value, i, array);
-        if (_.indexOf(seen, computed) < 0) {
+        if (!_.contains(seen, computed)) {
           seen.push(computed);
           result.push(value);
         }
-      } else if (_.indexOf(result, value) < 0) {
+      } else if (!_.contains(result, value)) {
         result.push(value);
       }
     }
@@ -10980,16 +11130,15 @@ module.exports = {
   // Produce an array that contains the union: each distinct element from all of
   // the passed-in arrays.
   _.union = function() {
-    return _.uniq(flatten(arguments, true, true, []));
+    return _.uniq(flatten(arguments, true, true));
   };
 
   // Produce an array that contains every item shared between all the
   // passed-in arrays.
   _.intersection = function(array) {
-    if (array == null) return [];
     var result = [];
     var argsLength = arguments.length;
-    for (var i = 0, length = array.length; i < length; i++) {
+    for (var i = 0, length = getLength(array); i < length; i++) {
       var item = array[i];
       if (_.contains(result, item)) continue;
       for (var j = 1; j < argsLength; j++) {
@@ -11003,7 +11152,7 @@ module.exports = {
   // Take the difference between one array and a number of other arrays.
   // Only the elements present in just the first array will remain.
   _.difference = function(array) {
-    var rest = flatten(slice.call(arguments, 1), true, true, []);
+    var rest = flatten(arguments, true, true, 1);
     return _.filter(array, function(value){
       return !_.contains(rest, value);
     });
@@ -11011,23 +11160,28 @@ module.exports = {
 
   // Zip together multiple lists into a single array -- elements that share
   // an index go together.
-  _.zip = function(array) {
-    if (array == null) return [];
-    var length = _.max(arguments, 'length').length;
-    var results = Array(length);
-    for (var i = 0; i < length; i++) {
-      results[i] = _.pluck(arguments, i);
+  _.zip = function() {
+    return _.unzip(arguments);
+  };
+
+  // Complement of _.zip. Unzip accepts an array of arrays and groups
+  // each array's elements on shared indices
+  _.unzip = function(array) {
+    var length = array && _.max(array, getLength).length || 0;
+    var result = Array(length);
+
+    for (var index = 0; index < length; index++) {
+      result[index] = _.pluck(array, index);
     }
-    return results;
+    return result;
   };
 
   // Converts lists into objects. Pass either a single array of `[key, value]`
   // pairs, or two parallel arrays of the same length -- one of keys, and one of
   // the corresponding values.
   _.object = function(list, values) {
-    if (list == null) return {};
     var result = {};
-    for (var i = 0, length = list.length; i < length; i++) {
+    for (var i = 0, length = getLength(list); i < length; i++) {
       if (values) {
         result[list[i]] = values[i];
       } else {
@@ -11037,40 +11191,73 @@ module.exports = {
     return result;
   };
 
+  // Generator function to create the findIndex and findLastIndex functions
+  function createPredicateIndexFinder(dir) {
+    return function(array, predicate, context) {
+      predicate = cb(predicate, context);
+      var length = getLength(array);
+      var index = dir > 0 ? 0 : length - 1;
+      for (; index >= 0 && index < length; index += dir) {
+        if (predicate(array[index], index, array)) return index;
+      }
+      return -1;
+    };
+  }
+
+  // Returns the first index on an array-like that passes a predicate test
+  _.findIndex = createPredicateIndexFinder(1);
+  _.findLastIndex = createPredicateIndexFinder(-1);
+
+  // Use a comparator function to figure out the smallest index at which
+  // an object should be inserted so as to maintain order. Uses binary search.
+  _.sortedIndex = function(array, obj, iteratee, context) {
+    iteratee = cb(iteratee, context, 1);
+    var value = iteratee(obj);
+    var low = 0, high = getLength(array);
+    while (low < high) {
+      var mid = Math.floor((low + high) / 2);
+      if (iteratee(array[mid]) < value) low = mid + 1; else high = mid;
+    }
+    return low;
+  };
+
+  // Generator function to create the indexOf and lastIndexOf functions
+  function createIndexFinder(dir, predicateFind, sortedIndex) {
+    return function(array, item, idx) {
+      var i = 0, length = getLength(array);
+      if (typeof idx == 'number') {
+        if (dir > 0) {
+            i = idx >= 0 ? idx : Math.max(idx + length, i);
+        } else {
+            length = idx >= 0 ? Math.min(idx + 1, length) : idx + length + 1;
+        }
+      } else if (sortedIndex && idx && length) {
+        idx = sortedIndex(array, item);
+        return array[idx] === item ? idx : -1;
+      }
+      if (item !== item) {
+        idx = predicateFind(slice.call(array, i, length), _.isNaN);
+        return idx >= 0 ? idx + i : -1;
+      }
+      for (idx = dir > 0 ? i : length - 1; idx >= 0 && idx < length; idx += dir) {
+        if (array[idx] === item) return idx;
+      }
+      return -1;
+    };
+  }
+
   // Return the position of the first occurrence of an item in an array,
   // or -1 if the item is not included in the array.
   // If the array is large and already in sort order, pass `true`
   // for **isSorted** to use binary search.
-  _.indexOf = function(array, item, isSorted) {
-    if (array == null) return -1;
-    var i = 0, length = array.length;
-    if (isSorted) {
-      if (typeof isSorted == 'number') {
-        i = isSorted < 0 ? Math.max(0, length + isSorted) : isSorted;
-      } else {
-        i = _.sortedIndex(array, item);
-        return array[i] === item ? i : -1;
-      }
-    }
-    for (; i < length; i++) if (array[i] === item) return i;
-    return -1;
-  };
-
-  _.lastIndexOf = function(array, item, from) {
-    if (array == null) return -1;
-    var idx = array.length;
-    if (typeof from == 'number') {
-      idx = from < 0 ? idx + from + 1 : Math.min(idx, from + 1);
-    }
-    while (--idx >= 0) if (array[idx] === item) return idx;
-    return -1;
-  };
+  _.indexOf = createIndexFinder(1, _.findIndex, _.sortedIndex);
+  _.lastIndexOf = createIndexFinder(-1, _.findLastIndex);
 
   // Generate an integer Array containing an arithmetic progression. A port of
   // the native Python `range()` function. See
   // [the Python documentation](http://docs.python.org/library/functions.html#range).
   _.range = function(start, stop, step) {
-    if (arguments.length <= 1) {
+    if (stop == null) {
       stop = start || 0;
       start = 0;
     }
@@ -11089,25 +11276,25 @@ module.exports = {
   // Function (ahem) Functions
   // ------------------
 
-  // Reusable constructor function for prototype setting.
-  var Ctor = function(){};
+  // Determines whether to execute a function as a constructor
+  // or a normal function with the provided arguments
+  var executeBound = function(sourceFunc, boundFunc, context, callingContext, args) {
+    if (!(callingContext instanceof boundFunc)) return sourceFunc.apply(context, args);
+    var self = baseCreate(sourceFunc.prototype);
+    var result = sourceFunc.apply(self, args);
+    if (_.isObject(result)) return result;
+    return self;
+  };
 
   // Create a function bound to a given object (assigning `this`, and arguments,
   // optionally). Delegates to **ECMAScript 5**'s native `Function.bind` if
   // available.
   _.bind = function(func, context) {
-    var args, bound;
     if (nativeBind && func.bind === nativeBind) return nativeBind.apply(func, slice.call(arguments, 1));
     if (!_.isFunction(func)) throw new TypeError('Bind must be called on a function');
-    args = slice.call(arguments, 2);
-    bound = function() {
-      if (!(this instanceof bound)) return func.apply(context, args.concat(slice.call(arguments)));
-      Ctor.prototype = func.prototype;
-      var self = new Ctor;
-      Ctor.prototype = null;
-      var result = func.apply(self, args.concat(slice.call(arguments)));
-      if (_.isObject(result)) return result;
-      return self;
+    var args = slice.call(arguments, 2);
+    var bound = function() {
+      return executeBound(func, bound, context, this, args.concat(slice.call(arguments)));
     };
     return bound;
   };
@@ -11117,15 +11304,16 @@ module.exports = {
   // as a placeholder, allowing any combination of arguments to be pre-filled.
   _.partial = function(func) {
     var boundArgs = slice.call(arguments, 1);
-    return function() {
-      var position = 0;
-      var args = boundArgs.slice();
-      for (var i = 0, length = args.length; i < length; i++) {
-        if (args[i] === _) args[i] = arguments[position++];
+    var bound = function() {
+      var position = 0, length = boundArgs.length;
+      var args = Array(length);
+      for (var i = 0; i < length; i++) {
+        args[i] = boundArgs[i] === _ ? arguments[position++] : boundArgs[i];
       }
       while (position < arguments.length) args.push(arguments[position++]);
-      return func.apply(this, args);
+      return executeBound(func, bound, this, this, args);
     };
+    return bound;
   };
 
   // Bind a number of an object's methods to that object. Remaining arguments
@@ -11145,7 +11333,7 @@ module.exports = {
   _.memoize = function(func, hasher) {
     var memoize = function(key) {
       var cache = memoize.cache;
-      var address = hasher ? hasher.apply(this, arguments) : key;
+      var address = '' + (hasher ? hasher.apply(this, arguments) : key);
       if (!_.has(cache, address)) cache[address] = func.apply(this, arguments);
       return cache[address];
     };
@@ -11164,9 +11352,7 @@ module.exports = {
 
   // Defers a function, scheduling it to run after the current call stack has
   // cleared.
-  _.defer = function(func) {
-    return _.delay.apply(_, [func, 1].concat(slice.call(arguments, 1)));
-  };
+  _.defer = _.partial(_.delay, _, 1);
 
   // Returns a function, that, when invoked, will only be triggered at most once
   // during a given window of time. Normally, the throttled function will run
@@ -11191,8 +11377,10 @@ module.exports = {
       context = this;
       args = arguments;
       if (remaining <= 0 || remaining > wait) {
-        clearTimeout(timeout);
-        timeout = null;
+        if (timeout) {
+          clearTimeout(timeout);
+          timeout = null;
+        }
         previous = now;
         result = func.apply(context, args);
         if (!timeout) context = args = null;
@@ -11213,7 +11401,7 @@ module.exports = {
     var later = function() {
       var last = _.now() - timestamp;
 
-      if (last < wait && last > 0) {
+      if (last < wait && last >= 0) {
         timeout = setTimeout(later, wait - last);
       } else {
         timeout = null;
@@ -11266,7 +11454,7 @@ module.exports = {
     };
   };
 
-  // Returns a function that will only be executed after being called N times.
+  // Returns a function that will only be executed on and after the Nth call.
   _.after = function(times, func) {
     return function() {
       if (--times < 1) {
@@ -11275,15 +11463,14 @@ module.exports = {
     };
   };
 
-  // Returns a function that will only be executed before being called N times.
+  // Returns a function that will only be executed up to (but not including) the Nth call.
   _.before = function(times, func) {
     var memo;
     return function() {
       if (--times > 0) {
         memo = func.apply(this, arguments);
-      } else {
-        func = null;
       }
+      if (times <= 1) func = null;
       return memo;
     };
   };
@@ -11295,13 +11482,47 @@ module.exports = {
   // Object Functions
   // ----------------
 
-  // Retrieve the names of an object's properties.
+  // Keys in IE < 9 that won't be iterated by `for key in ...` and thus missed.
+  var hasEnumBug = !{toString: null}.propertyIsEnumerable('toString');
+  var nonEnumerableProps = ['valueOf', 'isPrototypeOf', 'toString',
+                      'propertyIsEnumerable', 'hasOwnProperty', 'toLocaleString'];
+
+  function collectNonEnumProps(obj, keys) {
+    var nonEnumIdx = nonEnumerableProps.length;
+    var constructor = obj.constructor;
+    var proto = (_.isFunction(constructor) && constructor.prototype) || ObjProto;
+
+    // Constructor is a special case.
+    var prop = 'constructor';
+    if (_.has(obj, prop) && !_.contains(keys, prop)) keys.push(prop);
+
+    while (nonEnumIdx--) {
+      prop = nonEnumerableProps[nonEnumIdx];
+      if (prop in obj && obj[prop] !== proto[prop] && !_.contains(keys, prop)) {
+        keys.push(prop);
+      }
+    }
+  }
+
+  // Retrieve the names of an object's own properties.
   // Delegates to **ECMAScript 5**'s native `Object.keys`
   _.keys = function(obj) {
     if (!_.isObject(obj)) return [];
     if (nativeKeys) return nativeKeys(obj);
     var keys = [];
     for (var key in obj) if (_.has(obj, key)) keys.push(key);
+    // Ahem, IE < 9.
+    if (hasEnumBug) collectNonEnumProps(obj, keys);
+    return keys;
+  };
+
+  // Retrieve all the property names of an object.
+  _.allKeys = function(obj) {
+    if (!_.isObject(obj)) return [];
+    var keys = [];
+    for (var key in obj) keys.push(key);
+    // Ahem, IE < 9.
+    if (hasEnumBug) collectNonEnumProps(obj, keys);
     return keys;
   };
 
@@ -11314,6 +11535,21 @@ module.exports = {
       values[i] = obj[keys[i]];
     }
     return values;
+  };
+
+  // Returns the results of applying the iteratee to each element of the object
+  // In contrast to _.map it returns an object
+  _.mapObject = function(obj, iteratee, context) {
+    iteratee = cb(iteratee, context);
+    var keys =  _.keys(obj),
+          length = keys.length,
+          results = {},
+          currentKey;
+      for (var index = 0; index < length; index++) {
+        currentKey = keys[index];
+        results[currentKey] = iteratee(obj[currentKey], currentKey, obj);
+      }
+      return results;
   };
 
   // Convert an object into a list of `[key, value]` pairs.
@@ -11348,37 +11584,38 @@ module.exports = {
   };
 
   // Extend a given object with all the properties in passed-in object(s).
-  _.extend = function(obj) {
-    if (!_.isObject(obj)) return obj;
-    var source, prop;
-    for (var i = 1, length = arguments.length; i < length; i++) {
-      source = arguments[i];
-      for (prop in source) {
-        if (hasOwnProperty.call(source, prop)) {
-            obj[prop] = source[prop];
-        }
-      }
+  _.extend = createAssigner(_.allKeys);
+
+  // Assigns a given object with all the own properties in the passed-in object(s)
+  // (https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/assign)
+  _.extendOwn = _.assign = createAssigner(_.keys);
+
+  // Returns the first key on an object that passes a predicate test
+  _.findKey = function(obj, predicate, context) {
+    predicate = cb(predicate, context);
+    var keys = _.keys(obj), key;
+    for (var i = 0, length = keys.length; i < length; i++) {
+      key = keys[i];
+      if (predicate(obj[key], key, obj)) return key;
     }
-    return obj;
   };
 
   // Return a copy of the object only containing the whitelisted properties.
-  _.pick = function(obj, iteratee, context) {
-    var result = {}, key;
+  _.pick = function(object, oiteratee, context) {
+    var result = {}, obj = object, iteratee, keys;
     if (obj == null) return result;
-    if (_.isFunction(iteratee)) {
-      iteratee = createCallback(iteratee, context);
-      for (key in obj) {
-        var value = obj[key];
-        if (iteratee(value, key, obj)) result[key] = value;
-      }
+    if (_.isFunction(oiteratee)) {
+      keys = _.allKeys(obj);
+      iteratee = optimizeCb(oiteratee, context);
     } else {
-      var keys = concat.apply([], slice.call(arguments, 1));
-      obj = new Object(obj);
-      for (var i = 0, length = keys.length; i < length; i++) {
-        key = keys[i];
-        if (key in obj) result[key] = obj[key];
-      }
+      keys = flatten(arguments, false, false, 1);
+      iteratee = function(value, key, obj) { return key in obj; };
+      obj = Object(obj);
+    }
+    for (var i = 0, length = keys.length; i < length; i++) {
+      var key = keys[i];
+      var value = obj[key];
+      if (iteratee(value, key, obj)) result[key] = value;
     }
     return result;
   };
@@ -11388,7 +11625,7 @@ module.exports = {
     if (_.isFunction(iteratee)) {
       iteratee = _.negate(iteratee);
     } else {
-      var keys = _.map(concat.apply([], slice.call(arguments, 1)), String);
+      var keys = _.map(flatten(arguments, false, false, 1), String);
       iteratee = function(value, key) {
         return !_.contains(keys, key);
       };
@@ -11397,15 +11634,15 @@ module.exports = {
   };
 
   // Fill in a given object with default properties.
-  _.defaults = function(obj) {
-    if (!_.isObject(obj)) return obj;
-    for (var i = 1, length = arguments.length; i < length; i++) {
-      var source = arguments[i];
-      for (var prop in source) {
-        if (obj[prop] === void 0) obj[prop] = source[prop];
-      }
-    }
-    return obj;
+  _.defaults = createAssigner(_.allKeys, true);
+
+  // Creates an object that inherits from the given prototype object.
+  // If additional properties are provided then they will be added to the
+  // created object.
+  _.create = function(prototype, props) {
+    var result = baseCreate(prototype);
+    if (props) _.extendOwn(result, props);
+    return result;
   };
 
   // Create a (shallow-cloned) duplicate of an object.
@@ -11421,6 +11658,19 @@ module.exports = {
     interceptor(obj);
     return obj;
   };
+
+  // Returns whether an object has a given set of `key:value` pairs.
+  _.isMatch = function(object, attrs) {
+    var keys = _.keys(attrs), length = keys.length;
+    if (object == null) return !length;
+    var obj = Object(object);
+    for (var i = 0; i < length; i++) {
+      var key = keys[i];
+      if (attrs[key] !== obj[key] || !(key in obj)) return false;
+    }
+    return true;
+  };
+
 
   // Internal recursive comparison function for `isEqual`.
   var eq = function(a, b, aStack, bStack) {
@@ -11456,74 +11706,76 @@ module.exports = {
         // of `NaN` are not equivalent.
         return +a === +b;
     }
-    if (typeof a != 'object' || typeof b != 'object') return false;
+
+    var areArrays = className === '[object Array]';
+    if (!areArrays) {
+      if (typeof a != 'object' || typeof b != 'object') return false;
+
+      // Objects with different constructors are not equivalent, but `Object`s or `Array`s
+      // from different frames are.
+      var aCtor = a.constructor, bCtor = b.constructor;
+      if (aCtor !== bCtor && !(_.isFunction(aCtor) && aCtor instanceof aCtor &&
+                               _.isFunction(bCtor) && bCtor instanceof bCtor)
+                          && ('constructor' in a && 'constructor' in b)) {
+        return false;
+      }
+    }
     // Assume equality for cyclic structures. The algorithm for detecting cyclic
     // structures is adapted from ES 5.1 section 15.12.3, abstract operation `JO`.
+
+    // Initializing stack of traversed objects.
+    // It's done here since we only need them for objects and arrays comparison.
+    aStack = aStack || [];
+    bStack = bStack || [];
     var length = aStack.length;
     while (length--) {
       // Linear search. Performance is inversely proportional to the number of
       // unique nested structures.
       if (aStack[length] === a) return bStack[length] === b;
     }
-    // Objects with different constructors are not equivalent, but `Object`s
-    // from different frames are.
-    var aCtor = a.constructor, bCtor = b.constructor;
-    if (
-      aCtor !== bCtor &&
-      // Handle Object.create(x) cases
-      'constructor' in a && 'constructor' in b &&
-      !(_.isFunction(aCtor) && aCtor instanceof aCtor &&
-        _.isFunction(bCtor) && bCtor instanceof bCtor)
-    ) {
-      return false;
-    }
+
     // Add the first object to the stack of traversed objects.
     aStack.push(a);
     bStack.push(b);
-    var size, result;
+
     // Recursively compare objects and arrays.
-    if (className === '[object Array]') {
+    if (areArrays) {
       // Compare array lengths to determine if a deep comparison is necessary.
-      size = a.length;
-      result = size === b.length;
-      if (result) {
-        // Deep compare the contents, ignoring non-numeric properties.
-        while (size--) {
-          if (!(result = eq(a[size], b[size], aStack, bStack))) break;
-        }
+      length = a.length;
+      if (length !== b.length) return false;
+      // Deep compare the contents, ignoring non-numeric properties.
+      while (length--) {
+        if (!eq(a[length], b[length], aStack, bStack)) return false;
       }
     } else {
       // Deep compare objects.
       var keys = _.keys(a), key;
-      size = keys.length;
+      length = keys.length;
       // Ensure that both objects contain the same number of properties before comparing deep equality.
-      result = _.keys(b).length === size;
-      if (result) {
-        while (size--) {
-          // Deep compare each member
-          key = keys[size];
-          if (!(result = _.has(b, key) && eq(a[key], b[key], aStack, bStack))) break;
-        }
+      if (_.keys(b).length !== length) return false;
+      while (length--) {
+        // Deep compare each member
+        key = keys[length];
+        if (!(_.has(b, key) && eq(a[key], b[key], aStack, bStack))) return false;
       }
     }
     // Remove the first object from the stack of traversed objects.
     aStack.pop();
     bStack.pop();
-    return result;
+    return true;
   };
 
   // Perform a deep comparison to check if two objects are equal.
   _.isEqual = function(a, b) {
-    return eq(a, b, [], []);
+    return eq(a, b);
   };
 
   // Is a given array, string, or object empty?
   // An "empty" object has no enumerable own-properties.
   _.isEmpty = function(obj) {
     if (obj == null) return true;
-    if (_.isArray(obj) || _.isString(obj) || _.isArguments(obj)) return obj.length === 0;
-    for (var key in obj) if (_.has(obj, key)) return false;
-    return true;
+    if (isArrayLike(obj) && (_.isArray(obj) || _.isString(obj) || _.isArguments(obj))) return obj.length === 0;
+    return _.keys(obj).length === 0;
   };
 
   // Is a given value a DOM element?
@@ -11543,14 +11795,14 @@ module.exports = {
     return type === 'function' || type === 'object' && !!obj;
   };
 
-  // Add some isType methods: isArguments, isFunction, isString, isNumber, isDate, isRegExp.
-  _.each(['Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp'], function(name) {
+  // Add some isType methods: isArguments, isFunction, isString, isNumber, isDate, isRegExp, isError.
+  _.each(['Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp', 'Error'], function(name) {
     _['is' + name] = function(obj) {
       return toString.call(obj) === '[object ' + name + ']';
     };
   });
 
-  // Define a fallback version of the method in browsers (ahem, IE), where
+  // Define a fallback version of the method in browsers (ahem, IE < 9), where
   // there isn't any inspectable "Arguments" type.
   if (!_.isArguments(arguments)) {
     _.isArguments = function(obj) {
@@ -11558,8 +11810,9 @@ module.exports = {
     };
   }
 
-  // Optimize `isFunction` if appropriate. Work around an IE 11 bug.
-  if (typeof /./ !== 'function') {
+  // Optimize `isFunction` if appropriate. Work around some typeof bugs in old v8,
+  // IE 11 (#1621), and in Safari 8 (#1929).
+  if (typeof /./ != 'function' && typeof Int8Array != 'object') {
     _.isFunction = function(obj) {
       return typeof obj == 'function' || false;
     };
@@ -11611,6 +11864,7 @@ module.exports = {
     return value;
   };
 
+  // Predicate-generating functions. Often useful outside of Underscore.
   _.constant = function(value) {
     return function() {
       return value;
@@ -11619,30 +11873,28 @@ module.exports = {
 
   _.noop = function(){};
 
-  _.property = function(key) {
-    return function(obj) {
+  _.property = property;
+
+  // Generates a function for a given object that returns a given property.
+  _.propertyOf = function(obj) {
+    return obj == null ? function(){} : function(key) {
       return obj[key];
     };
   };
 
-  // Returns a predicate for checking whether an object has a given set of `key:value` pairs.
-  _.matches = function(attrs) {
-    var pairs = _.pairs(attrs), length = pairs.length;
+  // Returns a predicate for checking whether an object has a given set of
+  // `key:value` pairs.
+  _.matcher = _.matches = function(attrs) {
+    attrs = _.extendOwn({}, attrs);
     return function(obj) {
-      if (obj == null) return !length;
-      obj = new Object(obj);
-      for (var i = 0; i < length; i++) {
-        var pair = pairs[i], key = pair[0];
-        if (pair[1] !== obj[key] || !(key in obj)) return false;
-      }
-      return true;
+      return _.isMatch(obj, attrs);
     };
   };
 
   // Run a function **n** times.
   _.times = function(n, iteratee, context) {
     var accum = Array(Math.max(0, n));
-    iteratee = createCallback(iteratee, context, 1);
+    iteratee = optimizeCb(iteratee, context, 1);
     for (var i = 0; i < n; i++) accum[i] = iteratee(i);
     return accum;
   };
@@ -11691,10 +11943,12 @@ module.exports = {
 
   // If the value of the named `property` is a function then invoke it with the
   // `object` as context; otherwise, return it.
-  _.result = function(object, property) {
-    if (object == null) return void 0;
-    var value = object[property];
-    return _.isFunction(value) ? object[property]() : value;
+  _.result = function(object, property, fallback) {
+    var value = object == null ? void 0 : object[property];
+    if (value === void 0) {
+      value = fallback;
+    }
+    return _.isFunction(value) ? value.call(object) : value;
   };
 
   // Generate a unique integer id (unique within the entire client session).
@@ -11809,8 +12063,8 @@ module.exports = {
   // underscore functions. Wrapped objects may be chained.
 
   // Helper function to continue chaining intermediate results.
-  var result = function(obj) {
-    return this._chain ? _(obj).chain() : obj;
+  var result = function(instance, obj) {
+    return instance._chain ? _(obj).chain() : obj;
   };
 
   // Add your own custom functions to the Underscore object.
@@ -11820,7 +12074,7 @@ module.exports = {
       _.prototype[name] = function() {
         var args = [this._wrapped];
         push.apply(args, arguments);
-        return result.call(this, func.apply(_, args));
+        return result(this, func.apply(_, args));
       };
     });
   };
@@ -11835,7 +12089,7 @@ module.exports = {
       var obj = this._wrapped;
       method.apply(obj, arguments);
       if ((name === 'shift' || name === 'splice') && obj.length === 0) delete obj[0];
-      return result.call(this, obj);
+      return result(this, obj);
     };
   });
 
@@ -11843,13 +12097,21 @@ module.exports = {
   _.each(['concat', 'join', 'slice'], function(name) {
     var method = ArrayProto[name];
     _.prototype[name] = function() {
-      return result.call(this, method.apply(this._wrapped, arguments));
+      return result(this, method.apply(this._wrapped, arguments));
     };
   });
 
   // Extracts the result from a wrapped and chained object.
   _.prototype.value = function() {
     return this._wrapped;
+  };
+
+  // Provide unwrapping proxy for some methods used in engine operations
+  // such as arithmetic and JSON stringification.
+  _.prototype.valueOf = _.prototype.toJSON = _.prototype.value;
+
+  _.prototype.toString = function() {
+    return '' + this._wrapped;
   };
 
   // AMD registration happens at the end for compatibility with AMD loaders
@@ -11866,4 +12128,4 @@ module.exports = {
   }
 }.call(this));
 
-},{}]},{},[1]);
+},{}]},{},[4]);

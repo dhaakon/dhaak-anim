@@ -93,7 +93,7 @@ var Tween = function( options ){
   this.properties = null;
   this._curve = [0, 1];
   this.overshoot = 0;
-  this._manager = require('./kettle-tween-manager.js');
+  this._manager = require('./dhaak-tween-manager.js');
   this.easing = function(t, b, c, d){
     return c*t/d + b;
   };
