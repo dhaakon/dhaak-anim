@@ -1,8 +1,8 @@
 {
   "name": "dhaak-anim",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Simple lightweight tween class for my animations.",
-  "main": "dhaak-tween.js",
+  "main": "dhaak-anim.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

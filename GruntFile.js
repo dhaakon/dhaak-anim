@@ -28,7 +28,7 @@ module.exports = function(grunt){
       },
       build:{
         files:{
-          "./build/kettle.tween.js" : ['./kettle-tween.js']
+          "./build/dhaak.anim.js" : ['./dhaak-anim.js']
         }
       }
     },
